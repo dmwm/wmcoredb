@@ -40,21 +40,39 @@ project_root/
 
 The WMAgent database schema consists of several components:
 
-1. **Agent Database** (`sql/agent/`)
+1. **WMBS** (`sql/init/`)
+   - Core workload and job management
+   - Tables for jobs, subscriptions, and file tracking
+   - Initial data for job states and subscription types
+
+2. **Agent Database** (`sql/agent/`)
    - Core agent functionality
    - Component and worker management
 
-2. **BossAir** (`sql/bossair/`)
+3. **BossAir** (`sql/bossair/`)
    - Job submission and tracking
    - Grid and batch system integration
 
-3. **DBS3Buffer** (`sql/dbs3buffer/`)
+4. **DBS3Buffer** (`sql/dbs3buffer/`)
    - Dataset and file management
    - Checksum and location tracking
 
-4. **ResourceControl** (`sql/resourcecontrol/`)
+5. **ResourceControl** (`sql/resourcecontrol/`)
    - Site and resource management
    - Threshold control
+
+## WMBS Schema Initialization
+
+The WMBS schema is initialized first and consists of three files:
+
+```
+sql/init/{oracle,mariadb}/
+├── create_wmbs_tables.sql   # Core WMBS tables
+├── create_wmbs_indexes.sql  # Indexes for performance
+└── initial_wmbs_data.sql   # Initial data like job states
+```
+
+These files are executed in order by `execute_wmbs_sql.py` to set up the base WMBS schema before other components are initialized.
 
 ## Database Backend Support
 
