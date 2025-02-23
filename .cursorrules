@@ -13,6 +13,7 @@
     - If possible, use SQL statements compliant with both Oracke and MariaDB backends.
     - Write correct and sustainable SQL statements.
     - Use a directory named "oracle" for Oracle-specific SQL statements.
+    - For auto-incrementing columns, use the `IDENTITY` keyword in Oracle instead of sequences and triggers.
     - Compliance with Oracle version 19c.
     - Compliance with MariaDB version 10.6.21.
     - Use a directory named "mariadb" for MariaDB-specific SQL statements.
