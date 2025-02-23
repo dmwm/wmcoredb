@@ -99,8 +99,8 @@ class ExecuteWMBSSQL:
         Execute all WMBS SQL files in correct order
         """
         db_type = self.dbi.engine.dialect.name
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))  # Get src directory
-        sql_dir = os.path.join(base_dir, 'sql', 'init', db_type)  # Updated path for init files
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))  # Get project root
+        sql_dir = os.path.join(base_dir, 'sql', 'init', db_type)  # Updated path
 
         if not os.path.exists(sql_dir):
             raise WMException(f"SQL directory not found: {sql_dir}")
