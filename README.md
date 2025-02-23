@@ -105,4 +105,31 @@ which internally parses the command line arguments into `parameters` and modifie
     saveConfiguration(cfg, outputFile)
 ```
 
-With the WMAgent configuration file properly updated, named `
+With the WMAgent configuration file properly updated, named `config.py`, now the `manage` script calls [wmcore-db-init](https://github.com/dmwm/WMCore/blob/master/bin/wmcore-db-init), with arguments like:
+
+```bash
+wmcore-db-init --config $WMA_CONFIG_DIR/config.py --create --modules=WMCore.WMBS,WMCore.Agent.Database,WMComponent.DBS3Buffer,WMCore.BossAir,WMCore.ResourceControl;
+```
+
+This `wmcore-db-init` script itself calls the [WMInit.py](https://github.com/dmwm/WMCore/blob/master/src/python/WMCore/WMInit.py) script, executing basically the next four commands:
+```python
+wmInit = WMInit()
+wmInit.setLogging('wmcoreD', 'wmcoreD', logExists = False, logLevel = logging.DEBUG)
+wmInit.setDatabaseConnection(dbConfig=config.CoreDatabase.connectUrl, dialect=dialect, socketLoc = socket)
+wmInit.setSchema(modules, params = params)
+```
+
+In summary, the WMAgent database schema is an aggregation of the schema defined under each of the following WMAgent python directories:
+```
+WMCore.WMBS             --> originally under src/python/db/wmbs
+WMCore.Agent.Database   --> originally under src/python/db/agent
+WMCore.BossAir          --> originally under src/python/db/bossair
+WMCore.ResourceControl  --> originally under src/python/db/resourcecontrol
+WMComponent.DBS3Buffer  --> originally under src/python/db/dbs3buffer
+```
+
+The `wmcore-db-init` script itself calls the [WMInit.py](https://github.com/dmwm/WMCore/blob/master/src/python/WMCore/WMInit.py) script, executing basically the next four commands:
+```python
+wmInit = WMInit()
+wmInit.setLogging('wmcoreD', 'wmcoreD', logExists = False, logLevel = logging.DEBUG)
+```
