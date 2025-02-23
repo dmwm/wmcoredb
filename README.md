@@ -10,9 +10,21 @@ WMBS (Workload Management Bookkeeping Service) provides the database schema for 
 The WMBS database schema can be initialized using either MariaDB or Oracle backends. The schema files are organized as follows:
 
 ```
-src/sql/
-├── oracle/      # Oracle-specific SQL statements
-└── mariadb/     # MariaDB-specific SQL statements
+src/
+├── python/
+│   └── db/
+│       ├── create_wmbs.py
+│       └── execute_wmbs_sql.py
+└── sql/
+    └── init/
+        ├── oracle/
+        │   ├── create_wmbs_tables.sql
+        │   ├── create_wmbs_indexes.sql
+        │   └── initial_wmbs_data.sql
+        └── mariadb/
+            ├── create_wmbs_tables.sql
+            ├── create_wmbs_indexes.sql
+            └── initial_wmbs_data.sql
 ```
 
 ## Schema changes
@@ -93,15 +105,4 @@ which internally parses the command line arguments into `parameters` and modifie
     saveConfiguration(cfg, outputFile)
 ```
 
-With the WMAgent configuration file properly updated, named `config.py`, now the `manage` script calls [wmcore-db-init](https://github.com/dmwm/WMCore/blob/master/bin/wmcore-db-init), with arguments like:
-```bash
-    wmcore-db-init --config $WMA_CONFIG_DIR/config.py --create --modules=WMCore.WMBS,WMCore.Agent.Database,WMComponent.DBS3Buffer,WMCore.BossAir,WMCore.ResourceControl;
-```
-
-This `wmcore-db-init` script itself calls the [WMInit.py](https://github.com/dmwm/WMCore/blob/master/src/python/WMCore/WMInit.py) script, executing basically the next four commands:
-```python
-wmInit = WMInit()
-wmInit.setLogging('wmcoreD', 'wmcoreD', logExists = False, logLevel = logging.DEBUG)
-wmInit.setDatabaseConnection(dbConfig=config.CoreDatabase.connectUrl, dialect=dialect, socketLoc = socket)
-wmInit.setSchema(modules, params = params)
-```
+With the WMAgent configuration file properly updated, named `
