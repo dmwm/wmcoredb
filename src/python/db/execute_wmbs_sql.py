@@ -100,30 +100,31 @@ class ExecuteWMBSSQL:
         """
         db_type = self.dbi.engine.dialect.name
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))  # Get project root
-        sql_dir = os.path.join(base_dir, 'sql', 'init', db_type)  # Updated path
+        sql_dir = os.path.join(base_dir, 'sql', db_type)  # Updated path to reflect new structure
 
         if not os.path.exists(sql_dir):
             raise WMException(f"SQL directory not found: {sql_dir}")
 
-        files_to_execute = [
-            'create_wmbs_tables.sql',
-            'create_wmbs_indexes.sql',
-            'initial_wmbs_data.sql'
-        ]
+        # Assuming the sub-directories are named in a specific order or pattern
+        sub_dirs = sorted([d for d in os.listdir(sql_dir) if os.path.isdir(os.path.join(sql_dir, d))])
 
         transaction = self.dbi.beginTransaction()
         try:
-            for filename in files_to_execute:
-                filepath = os.path.join(sql_dir, filename)
-                if not os.path.exists(filepath):
-                    raise WMException(f"SQL file not found: {filepath}")
-                
-                self.logger.info(f"Executing {filename}...")
-                self.execute_sql_file(filepath, transaction)
-            
+            for sub_dir in sub_dirs:
+                sub_dir_path = os.path.join(sql_dir, sub_dir)
+                files_to_execute = sorted([f for f in os.listdir(sub_dir_path) if f.endswith('.sql')])
+
+                for filename in files_to_execute:
+                    filepath = os.path.join(sub_dir_path, filename)
+                    if not os.path.exists(filepath):
+                        raise WMException(f"SQL file not found: {filepath}")
+
+                    self.logger.info(f"Executing {filename} in {sub_dir}...")
+                    self.execute_sql_file(filepath, transaction)
+
             transaction.commit()
             self.logger.info("Successfully executed all WMBS SQL files")
-            
+
         except:
             transaction.rollback()
             raise

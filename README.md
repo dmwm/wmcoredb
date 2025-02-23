@@ -11,8 +11,8 @@ The database schema files are organized as follows:
 
 ```
 project_root/
-├── sql/                    # Database schema files
-│   ├── init/              # Initial schema setup
+├── sql/                   # Database schema files
+│   ├── wmbs/              # WMCore.WMBS schema
 │   │   ├── oracle/
 │   │   └── mariadb/
 │   ├── agent/             # WMCore.Agent.Database schema
@@ -30,6 +30,8 @@ project_root/
 └── src/
     └── python/
         └── db/            # Schema generation code
+            ├── wmbs/
+            ├── agent/
             ├── bossair/
             ├── dbs3buffer/
             ├── resourcecontrol/
@@ -40,7 +42,7 @@ project_root/
 
 The WMAgent database schema consists of several components:
 
-1. **WMBS** (`sql/init/`)
+1. **WMBS** (`sql/wmbs/`)
    - Core workload and job management
    - Tables for jobs, subscriptions, and file tracking
    - Initial data for job states and subscription types
@@ -66,7 +68,7 @@ The WMAgent database schema consists of several components:
 The WMBS schema is initialized first and consists of three files:
 
 ```
-sql/init/{oracle,mariadb}/
+sql/wmbs/{oracle,mariadb}/
 ├── create_wmbs_tables.sql   # Core WMBS tables
 ├── create_wmbs_indexes.sql  # Indexes for performance
 └── initial_wmbs_data.sql   # Initial data like job states
