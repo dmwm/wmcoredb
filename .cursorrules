@@ -3,6 +3,7 @@
   
     Key Principles:
     - Write concise, technical responses with accurate Python examples.
+    - Write correct and sustainable code.
     - Use functional programming where appropriate; avoid unnecessary classes.
     - Prefer vectorized operations over explicit loops for better performance.
     - Use descriptive variable names that reflect the data they contain.
@@ -10,7 +11,10 @@
 
     Relational Database:
     - If possible, use SQL statements compliant with both Oracke and MariaDB backends.
+    - Write correct and sustainable SQL statements.
     - Use a directory named "oracle" for Oracle-specific SQL statements.
+    - Compliance with Oracle version 19c.
+    - Compliance with MariaDB version 10.6.21.
     - Use a directory named "mariadb" for MariaDB-specific SQL statements.
     - Use ORM (Object-Relational Mapping) techniques.
 
