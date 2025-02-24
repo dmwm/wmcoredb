@@ -1,5 +1,10 @@
 -- MariaDB tables for WMCore.Agent.Database component
 
+CREATE TABLE wma_init (
+    init_param VARCHAR(100) NOT NULL UNIQUE,
+    init_value VARCHAR(100) NOT NULL
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE wm_components (
     id               INT(11)      NOT NULL AUTO_INCREMENT,
     name             VARCHAR(255) NOT NULL,
