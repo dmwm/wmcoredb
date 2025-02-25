@@ -1,7 +1,7 @@
 -- Oracle tables for WMCore.Agent.Database component
 
 -- Create tables
-CREATE TABLE wma_init (
+CREATE TABLE wm_init (
     init_param VARCHAR2(100) NOT NULL,
     init_value VARCHAR2(100) NOT NULL,
     CONSTRAINT wma_init_uniq_param UNIQUE (init_param)
