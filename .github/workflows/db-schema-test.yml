@@ -21,7 +21,7 @@ jobs:
           MYSQL_DATABASE: wmagent
           MYSQL_HOST: 127.0.0.1
         ports:
-          - ${{ env.MYSQL_PORT }}:3306
+          - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -h localhost"
           --health-interval=10s
