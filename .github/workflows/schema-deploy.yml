@@ -61,7 +61,7 @@ jobs:
           max_retries=30
           counter=0
           echo "Waiting for MariaDB to be ready..."
-          while ! mariadb-admin ping -h localhost -P 3306 -u root -ptestroot --silent; do
+          while ! docker exec $(docker ps -q --filter "ancestor=mariadb:${{ matrix.mariadb-version }}") mariadb-admin ping -h localhost -P 3306 -u root -ptestroot --silent; do
             counter=$((counter + 1))
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for MariaDB to be ready"
