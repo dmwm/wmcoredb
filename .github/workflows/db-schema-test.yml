@@ -1,0 +1,110 @@
+name: Database Schema Test
+
+on:
+  push:
+    paths:
+      - 'sql/**/*.sql'
+  pull_request:
+    paths:
+      - 'sql/**/*.sql'
+
+jobs:
+  test-mariadb-schema:
+    runs-on: ubuntu-latest
+    env:
+      MYSQL_PORT: 3306
+    strategy:
+      matrix:
+        mariadb-version: ['10.6', '10.11', '11.4']
+    timeout-minutes: 10
+
+    services:
+      mariadb:
+        image: mariadb:${{ matrix.mariadb-version }}
+        env:
+          MYSQL_TEST_USER: root
+          MYSQL_TEST_PASS: testroot
+          MYSQL_DATABASE: wmagent
+          MYSQL_HOST: 127.0.0.1
+        ports:
+          - ${{ env.MYSQL_PORT }}:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Environment
+        run: |
+          [ -z "$MYSQL_HOST" ] && echo "MYSQL_HOST is not set" && exit 1
+          [ -z "$MYSQL_PORT" ] && echo "MYSQL_PORT is not set" && exit 1
+          [ -z "$MYSQL_DATABASE" ] && echo "MYSQL_DATABASE is not set" && exit 1
+
+      - name: SQL Lint
+        run: |
+          # Using sqlfluff or similar SQL linter
+          pip install sqlfluff
+          sqlfluff lint sql/**/*.sql || exit 1  # Exit if linting fails
+
+      - name: Wait for MariaDB
+        run: |
+          while ! mysqladmin ping -h"$MYSQL_HOST" -P"$MYSQL_PORT" --silent; do
+            sleep 1
+          done
+
+      - name: Deploy WMBS Schema
+        run: |
+          set -e  # Exit immediately if a command exits with a non-zero status
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/wmbs/mariadb/create_wmbs_tables.sql || exit 1
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/wmbs/mariadb/create_wmbs_indexes.sql
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/wmbs/mariadb/initial_wmbs_data.sql
+
+      - name: Deploy Agent Schema
+        run: |
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/agent/mariadb/create_agent.sql
+
+      - name: Deploy DBS3Buffer Schema
+        run: |
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/dbs3buffer/mariadb/create_dbs3buffer.sql
+
+      - name: Deploy BossAir Schema
+        run: |
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/bossair/mariadb/create_bossair.sql
+
+      - name: Deploy ResourceControl Schema
+        run: |
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE < sql/resourcecontrol/mariadb/create_resourcecontrol.sql
+
+      - name: Verify Schema Deployment
+        run: |
+          # Check if tables exist and have correct structure
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE -e "
+            SELECT table_name, table_schema 
+            FROM information_schema.tables 
+            WHERE table_schema = '$MYSQL_DATABASE'
+            ORDER BY table_name;
+          "
+
+          # Verify some key relationships
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE -e "
+            SELECT 
+              table_name,
+              column_name,
+              referenced_table_name,
+              referenced_column_name
+            FROM information_schema.key_column_usage
+            WHERE referenced_table_name IS NOT NULL
+              AND table_schema = '$MYSQL_DATABASE'
+            ORDER BY table_name, column_name;
+          "
+
+          # Check for any errors in table creation
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS $MYSQL_DATABASE -e "SHOW ENGINE INNODB STATUS\G" | grep -i error 
+
+      - name: Cleanup
+        if: always()  # Run even if previous steps failed
+        run: |
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS -e "DROP DATABASE IF EXISTS $MYSQL_DATABASE" 
