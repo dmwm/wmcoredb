@@ -45,11 +45,16 @@ jobs:
           [ -z "$MARIADB_DATABASE" ] && echo "MARIADB_DATABASE is not set" && exit 14
           echo "All required environment variables are set!"
 
-      - name: SQL Lint
+      - name: MariaDB SQL Lint
         run: |
           # Using sqlfluff or similar SQL linter
           pip install sqlfluff
-          sqlfluff lint sql/**/*.sql || exit 1  # Exit if linting fails
+          sqlfluff lint --dialect mysql sql/**/mariadb/*.sql || exit 21  # Exit if linting fails
+
+      - name: Oracle SQL Lint
+        run: |
+          # Using sqlfluff with Oracle dialect
+          sqlfluff lint --dialect oracle sql/**/oracle/*.sql || exit 22  # Exit if linting fails
 
       - name: Wait for MariaDB
         run: |
