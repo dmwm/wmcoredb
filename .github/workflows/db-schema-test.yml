@@ -47,14 +47,12 @@ jobs:
 
       - name: MariaDB SQL Lint
         run: |
-          # Using sqlfluff or similar SQL linter
           pip install sqlfluff
-          sqlfluff lint --dialect mysql sql/**/mariadb/*.sql || exit 21  # Exit if linting fails
+          sqlfluff lint sql/**/mariadb/*.sql || exit 21  # Will automatically use .sqlfluff from repo root
 
       - name: Oracle SQL Lint
         run: |
-          # Using sqlfluff with Oracle dialect
-          sqlfluff lint --dialect oracle sql/**/oracle/*.sql || exit 22  # Exit if linting fails
+          sqlfluff lint --dialect oracle sql/**/oracle/*.sql || exit 22  # Will automatically use .sqlfluff from repo root
 
       - name: Wait for MariaDB
         run: |
