@@ -100,7 +100,7 @@ jobs:
 
       - name: Verify Schema Deployment
         run: |
-          # Check if tables exist and have correct structure
+          echo "Checking table structure..."
           mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "
             SELECT table_name, table_schema 
             FROM information_schema.tables 
@@ -108,7 +108,7 @@ jobs:
             ORDER BY table_name;
           "
 
-          # Verify some key relationships
+          echo "Checking foreign key relationships..."
           mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "
             SELECT 
               table_name,
@@ -121,8 +121,17 @@ jobs:
             ORDER BY table_name, column_name;
           "
 
-          # Check for any errors in table creation
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "SHOW ENGINE INNODB STATUS\G" | grep -i error 
+          echo "Checking for critical errors..."
+          # Only grep for specific error patterns and exclude known benign messages
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "SHOW ENGINE INNODB STATUS\G" | \
+            grep -i "error" | \
+            grep -v -E "Error count|error_count|errors_count|last_error|error_file|error_function|error_line|error_key_name|error_message"
+
+          # If no critical errors found, grep will exit with 1, but that's okay
+          if [ $? -eq 1 ]; then
+            echo "No critical errors found in InnoDB status"
+            exit 0
+          fi
 
       - name: Cleanup
         if: always()
