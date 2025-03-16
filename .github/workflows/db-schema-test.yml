@@ -1,12 +1,6 @@
 name: Database Schema Test
 
-on:
-  push:
-    paths:
-      - 'sql/**/*.sql'
-  pull_request:
-    paths:
-      - 'sql/**/*.sql'
+on: [push, pull_request]
 
 jobs:
   test-mariadb-schema:
