@@ -1,0 +1,37 @@
+name: SQL Linting
+
+on: [push, pull_request]
+
+jobs:
+  lint-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install SQLFluff
+        run: |
+          pip install sqlfluff
+
+      - name: MariaDB SQL Lint
+        run: |
+          echo "Finding MariaDB SQL files..."
+          for file in sql/**/mariadb/*.sql; do
+            echo "Linting: $file"
+            sqlfluff lint "$file"
+          done
+
+      - name: Oracle SQL Lint
+        run: |
+          echo "Finding Oracle SQL files..."
+          for file in sql/**/oracle/*.sql; do
+            echo "Linting: $file"
+            sqlfluff lint \
+              --config .sqlfluff.oracle \
+              "$file" \
+              || echo "::warning ::Linting issues found in $file"
+          done 

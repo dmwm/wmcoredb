@@ -1,9 +1,15 @@
-name: Database Schema Test
+name: Database Schema Deployment
 
-on: [push, pull_request]
+on:
+  workflow_run:
+    workflows: ["SQL Linting"]
+    types:
+      - completed
 
 jobs:
-  test-mariadb-schema:
+  deploy-mariadb-schema:
+    # Only run if the linting workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       MARIADB_PORT: 3306
@@ -44,26 +50,6 @@ jobs:
           [ -z "$MARIADB_PASSWORD" ] && echo "MARIADB_PASSWORD is not set" && exit 13
           [ -z "$MARIADB_DATABASE" ] && echo "MARIADB_DATABASE is not set" && exit 14
           echo "All required environment variables are set!"
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Install SQLFluff
-        run: |
-          pip install sqlfluff
-
-      - name: MariaDB SQL Lint
-        run: |
-          echo "Linting MariaDB SQL files..."
-          sqlfluff lint sql/**/mariadb/*.sql
-
-      - name: Oracle SQL Lint
-        run: |
-          echo "Linting Oracle SQL files..."
-          sqlfluff lint --config .sqlfluff.oracle sql/**/oracle/*.sql || \
-            echo "::warning ::Oracle SQL linting completed with warnings"
 
       - name: Wait for MariaDB
         run: |
@@ -131,11 +117,8 @@ jobs:
           mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "SHOW ENGINE INNODB STATUS\G" | grep -i error 
 
       - name: Cleanup
-        if: always()  # Run even if previous steps failed
-        continue-on-error: true  # Don't fail the workflow if cleanup fails
+        if: always()
+        continue-on-error: true
         run: |
-          # Try to drop database, but don't fail if it doesn't exist or if connection fails
           mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD -e "DROP DATABASE IF EXISTS $MARIADB_DATABASE" || true
-
-          # Additional cleanup commands if needed
-          echo "Cleanup attempted - any errors above can be safely ignored"
+          echo "Cleanup attempted - any errors above can be safely ignored" 
