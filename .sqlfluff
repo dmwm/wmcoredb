@@ -7,19 +7,11 @@ max_line_length = 80
 # L002: Mixed indentation found
 # L003: Expected newline between elements
 # L004: Expected single space between keywords
-# L005: Expected single space before/after operators
-# L006: Expected single space before/after parenthesis
-# L007: Expected single space around commas
-# L008: Expected single space around comparison operators
 # L009: Expected single space before/after comments
-# L010: Expected consistent line endings
-# L011: Expected consistent space around operators
-# L012: Expected consistent space around brackets
-# L013: Expected consistent space around parentheses
 # L014: Line is too long
 # L016: Line length exceeds max_line_length
 # RF04: Keywords should not be used as identifiers
-exclude_rules = L001,L002,L003,L004,L005,L006,L007,L008,L009,L010,L011,L012,L013,L014,L016,RF04
+exclude_rules = L001,L002,L003,L004,L009,L014,L016,RF04
 
 [sqlfluff:indentation]
 tab_space_size = 4
