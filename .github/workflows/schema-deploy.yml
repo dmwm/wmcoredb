@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MARIADB_PORT: 3306
-      MARIADB_HOST: 127.0.0.1
+      MARIADB_HOST: localhost
       MARIADB_USER: root
       MARIADB_PASSWORD: testroot
       MARIADB_DATABASE: wmagent
@@ -33,10 +33,10 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mariadb-admin ping -h localhost -u root -ptestroot"
-          --health-interval=5s
-          --health-timeout=10s
-          --health-retries=5
+          --health-cmd="mariadb-admin ping -h localhost -P 3306 -u root -ptestroot"
+          --health-interval=10s
+          --health-timeout=20s
+          --health-retries=10
           --health-start-period=30s
 
     steps:
@@ -56,10 +56,13 @@ jobs:
           max_retries=30
           counter=0
           echo "Waiting for MariaDB to be ready..."
-          while ! mariadb-admin ping -h"$MARIADB_HOST" -P"$MARIADB_PORT" -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; do
+          while ! mariadb-admin ping -h localhost -P $MARIADB_PORT -u root -ptestroot --silent; do
             counter=$((counter + 1))
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for MariaDB to be ready"
+              echo "Debug: Checking MariaDB status..."
+              docker ps
+              docker logs $(docker ps -q --filter "ancestor=mariadb:${{ matrix.mariadb-version }}")
               exit 1
             fi
             echo "Attempt $counter/$max_retries: MariaDB is not ready yet, waiting..."
