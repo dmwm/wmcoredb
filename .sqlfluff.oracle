@@ -1,0 +1,57 @@
+[sqlfluff]
+# Use ANSI dialect as it's more permissive for Oracle syntax
+dialect = ansi
+
+# Basic formatting rules
+max_line_length = 120
+indent_unit = space
+tab_space_size = 4
+
+# Exclude rules that conflict with Oracle syntax or conventions
+exclude_rules = L001,L002,L003,L004,L009,L014,L016,L031,L034,L042,L047
+
+[sqlfluff:indentation]
+# Oracle standard indentation
+indented_joins = false
+indented_using_on = true
+template_blocks_indent = false
+
+[sqlfluff:layout:type:comma]
+# Comma style configuration
+line_position = trailing
+spacing_before = touch
+spacing_after = single
+
+[sqlfluff:rules:capitalisation.keywords]
+# Oracle typically uses UPPER CASE keywords
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.identifiers]
+# Oracle typically uses lower_case for identifiers
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+# Oracle built-in functions are typically UPPER CASE
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.types]
+# Oracle data types are typically UPPER CASE
+capitalisation_policy = upper
+
+[sqlfluff:rules:convention.terminator]
+# Require semi-colons at the end of statements
+multiline_newline = false
+require_final_semicolon = true
+
+[sqlfluff:rules:ambiguous.column_references]
+# Allow implicit group by/order by column names
+group_by_and_order_by_style = implicit
+
+[sqlfluff:rules:references.special_chars]
+# Allow Oracle-specific special characters
+allow_space_in_identifier = false
+additional_allowed_characters = "$#_"
+
+[sqlfluff:rules:convention.blocked_words]
+# Oracle-specific blocked words
+blocked_words = None 
