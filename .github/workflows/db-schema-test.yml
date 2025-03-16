@@ -7,6 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MYSQL_PORT: 3306
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_TEST_USER: root
+      MYSQL_TEST_PASS: testroot
+      MYSQL_DATABASE: wmagent
     strategy:
       matrix:
         mariadb-version: ['10.6', '10.11', '11.4']
@@ -16,11 +20,10 @@ jobs:
       mariadb:
         image: mariadb:${{ matrix.mariadb-version }}
         env:
-          MYSQL_TEST_USER: root
-          MYSQL_TEST_PASS: testroot
-          MYSQL_DATABASE: wmagent
-          MYSQL_HOST: 127.0.0.1
           MARIADB_ROOT_PASSWORD: testroot
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_TEST_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_TEST_PASS }}
         ports:
           - 3306:3306
         options: >-
