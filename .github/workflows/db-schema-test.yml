@@ -20,6 +20,7 @@ jobs:
           MYSQL_TEST_PASS: testroot
           MYSQL_DATABASE: wmagent
           MYSQL_HOST: 127.0.0.1
+          MARIADB_ROOT_PASSWORD: testroot
         ports:
           - 3306:3306
         options: >-
