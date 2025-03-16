@@ -38,9 +38,12 @@ jobs:
 
       - name: Validate Environment
         run: |
-          [ -z "$MARIADB_HOST" ] && echo "MARIADB_HOST is not set" && exit 1
-          [ -z "$MARIADB_PORT" ] && echo "MARIADB_PORT is not set" && exit 1
-          [ -z "$MARIADB_DATABASE" ] && echo "MARIADB_DATABASE is not set" && exit 1
+          [ -z "$MARIADB_HOST" ] && echo "MARIADB_HOST is not set" && exit 10
+          [ -z "$MARIADB_PORT" ] && echo "MARIADB_PORT is not set" && exit 11
+          [ -z "$MARIADB_USER" ] && echo "MARIADB_USER is not set" && exit 12
+          [ -z "$MARIADB_PASSWORD" ] && echo "MARIADB_PASSWORD is not set" && exit 13
+          [ -z "$MARIADB_DATABASE" ] && echo "MARIADB_DATABASE is not set" && exit 14
+          echo "All required environment variables are set!"
 
       - name: SQL Lint
         run: |
