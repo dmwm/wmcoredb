@@ -27,7 +27,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ptestroot"
+          --health-cmd="mysqladmin ping -h localhost --password=testroot"
           --health-interval=5s
           --health-timeout=10s
           --health-retries=5
@@ -50,9 +50,19 @@ jobs:
 
       - name: Wait for MariaDB
         run: |
-          while ! mysqladmin ping -h"$MYSQL_HOST" -P"$MYSQL_PORT" --silent; do
-            sleep 1
+          max_retries=30
+          counter=0
+          echo "Waiting for MariaDB to be ready..."
+          while ! mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u"$MYSQL_TEST_USER" -p"$MYSQL_TEST_PASS" -e "SELECT 1" >/dev/null 2>&1; do
+            counter=$((counter + 1))
+            if [ $counter -gt $max_retries ]; then
+              echo "Error: Timed out waiting for MariaDB to be ready"
+              exit 1
+            fi
+            echo "Attempt $counter/$max_retries: MariaDB is not ready yet, waiting..."
+            sleep 2
           done
+          echo "MariaDB is ready!"
 
       - name: Deploy WMBS Schema
         run: |
@@ -105,5 +115,10 @@ jobs:
 
       - name: Cleanup
         if: always()  # Run even if previous steps failed
+        continue-on-error: true  # Don't fail the workflow if cleanup fails
         run: |
-          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS -e "DROP DATABASE IF EXISTS $MYSQL_DATABASE" 
+          # Try to drop database, but don't fail if it doesn't exist or if connection fails
+          mysql -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_TEST_USER -p$MYSQL_TEST_PASS -e "DROP DATABASE IF EXISTS $MYSQL_DATABASE" || true
+
+          # Additional cleanup commands if needed
+          echo "Cleanup attempted - any errors above can be safely ignored"
