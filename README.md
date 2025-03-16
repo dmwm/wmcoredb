@@ -1,9 +1,36 @@
-This repository contains the code for creating the WMAgent database.
+[![SQL Linting](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml)
+[![Database Schema Deployment](https://github.com/amaltaro/wmcoredb/actions/workflows/schema-deploy.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/schema-deploy.yml)
 
-# WMBS Database Schema
+# WMCore Database Schema
 
-## Overview
-WMBS (Workload Management Bookkeeping Service) provides the database schema for managing workloads and jobs.
+Database schema definitions for WMCore components, including both MariaDB and Oracle backends.
+
+## CI/CD Pipeline
+
+The continuous integration pipeline is split into two workflows:
+
+### SQL Linting
+Validates SQL syntax and formatting using SQLFluff:
+* MariaDB files using default SQLFluff rules
+* Oracle files using custom rules defined in `.sqlfluff.oracle`
+* Enforces consistent SQL style and formatting
+* Runs on every push and pull request
+
+### Schema Deployment
+Automatically tests schema deployment in MariaDB:
+* Runs only after successful linting
+* Tests against multiple MariaDB versions:
+  - 10.6 (LTS)
+  - 10.11 (LTS)
+  - 11.4 (Latest)
+* Deploys and validates:
+  - WMBS Schema
+  - Agent Schema
+  - DBS3Buffer Schema
+  - BossAir Schema
+  - ResourceControl Schema
+* Verifies table structures and relationships
+* Checks for any critical database errors
 
 ## Directory Structure
 
