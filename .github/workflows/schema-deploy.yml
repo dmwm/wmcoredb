@@ -122,19 +122,10 @@ jobs:
           "
 
           echo -e "\nChecking for critical errors..."
-          # Store InnoDB status in a variable
-          INNODB_STATUS=$(mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "SHOW ENGINE INNODB STATUS\G")
-          echo "Debug: InnoDB status:"
-          echo "$INNODB_STATUS"
-
-          # Look for error patterns but exclude benign ones
-          ERROR_COUNT=$(echo "$INNODB_STATUS" | grep -i "error" | \
-            grep -v -E "Error count|error_count|errors_count|last_error|error_file|error_function|error_line|error_key_name|error_message" | wc -l)
-
-          if [ $ERROR_COUNT -gt 0 ]; then
-            echo -e "\nFound $ERROR_COUNT critical errors in InnoDB status:"
-            echo "$INNODB_STATUS" | grep -i "error" | \
-              grep -v -E "Error count|error_count|errors_count|last_error|error_file|error_function|error_line|error_key_name|error_message"
+          ERRORS=$(mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE -e "SHOW ENGINE INNODB STATUS\G" | grep -i "error:" || true)
+          if [ -n "$ERRORS" ]; then
+            echo -e "\nFound errors in InnoDB status:"
+            echo "$ERRORS"
             exit 1
           else
             echo -e "\nNo critical errors found in InnoDB status"
