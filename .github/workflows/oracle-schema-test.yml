@@ -49,7 +49,7 @@ jobs:
             echo "Attempt $counter/$max_retries:"
 
             echo "1. Testing connection from inside container..."
-            if docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
+            if docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << 'EOF'
             SELECT 1 FROM dual;
             exit;
             EOF
