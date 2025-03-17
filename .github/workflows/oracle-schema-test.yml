@@ -15,13 +15,11 @@ jobs:
       ORACLE_PORT: 1521
       ORACLE_SERVICE: XE
       ORACLE_USER: system
-      ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
-      SCHEMA_USER: wmcore
-      SCHEMA_PASSWORD: ${{ secrets.SCHEMA_PASSWORD }}
+      SCHEMA_USER: wmagent
 
     services:
       oracle:
-        image: gvenzl/oracle-xe:19
+        image: gvenzl/oracle-xe:19-slim
         env:
           ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
           APP_USER: ${{ env.SCHEMA_USER }}
@@ -48,18 +46,26 @@ jobs:
           sudo alien -i oracle-instantclient-sqlplus-19.9.0.0.0-1.el8.x86_64.rpm
           echo "export LD_LIBRARY_PATH=/usr/lib/oracle/19.9/client64/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
+      - name: Verify SQLPlus Installation
+        run: |
+          which sqlplus || echo "SQLPlus not found in PATH"
+          sqlplus -V || echo "SQLPlus version check failed"
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+
       - name: Wait for Oracle
         run: |
           max_retries=30
           counter=0
           echo "Waiting for Oracle to be ready..."
-          while ! sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          while ! sqlplus -s "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
           exit;
           EOF
           do
             counter=$((counter + 1))
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for Oracle"
+              docker ps
+              docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:19-slim")
               exit 1
             fi
             echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
@@ -157,8 +163,13 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
-          DROP USER ${SCHEMA_USER} CASCADE;
-          EXIT;
-          EOF
-          echo "Cleanup attempted - any errors above can be safely ignored" 
+          if which sqlplus >/dev/null 2>&1; then
+            echo "Running cleanup..."
+            sqlplus -s "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
+            DROP USER ${SCHEMA_USER} CASCADE;
+            EXIT;
+            EOF
+            echo "Cleanup completed"
+          else
+            echo "SQLPlus not available, skipping cleanup"
+          fi
