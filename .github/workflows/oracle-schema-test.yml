@@ -1,0 +1,164 @@
+name: Oracle Schema Validation
+
+on:
+  workflow_run:
+    workflows: ["SQL Linting"]
+    types:
+      - completed
+
+jobs:
+  validate-oracle-schema:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      ORACLE_HOST: localhost
+      ORACLE_PORT: 1521
+      ORACLE_SERVICE: XE
+      ORACLE_USER: system
+      ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+      SCHEMA_USER: wmcore
+      SCHEMA_PASSWORD: ${{ secrets.SCHEMA_PASSWORD }}
+
+    services:
+      oracle:
+        image: gvenzl/oracle-xe:19
+        env:
+          ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+          APP_USER: ${{ env.SCHEMA_USER }}
+          APP_USER_PASSWORD: ${{ secrets.SCHEMA_PASSWORD }}
+        ports:
+          - 1521:1521
+        options: >-
+          --health-cmd healthcheck.sh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period=60s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Oracle Instant Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y alien libaio1
+          wget https://download.oracle.com/otn_software/linux/instantclient/199000/oracle-instantclient-basic-19.9.0.0.0-1.el8.x86_64.rpm
+          sudo alien -i oracle-instantclient-basic-19.9.0.0.0-1.el8.x86_64.rpm
+          wget https://download.oracle.com/otn_software/linux/instantclient/199000/oracle-instantclient-sqlplus-19.9.0.0.0-1.el8.x86_64.rpm
+          sudo alien -i oracle-instantclient-sqlplus-19.9.0.0.0-1.el8.x86_64.rpm
+          echo "export LD_LIBRARY_PATH=/usr/lib/oracle/19.9/client64/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+      - name: Wait for Oracle
+        run: |
+          max_retries=30
+          counter=0
+          echo "Waiting for Oracle to be ready..."
+          while ! sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          exit;
+          EOF
+          do
+            counter=$((counter + 1))
+            if [ $counter -gt $max_retries ]; then
+              echo "Error: Timed out waiting for Oracle"
+              exit 1
+            fi
+            echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
+            sleep 10
+          done
+          echo "Oracle is ready!"
+
+      - name: Deploy WMBS Schema
+        run: |
+          echo -e "\nDeploying WMBS tables..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/create_wmbs_tables.sql
+          
+          echo -e "\nDeploying WMBS indexes..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/create_wmbs_indexes.sql
+          
+          echo -e "\nInitializing WMBS data..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/initial_wmbs_data.sql
+
+      - name: Deploy Agent Schema
+        run: |
+          echo -e "\nDeploying Agent schema..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/agent/oracle/create_agent.sql
+
+      - name: Deploy DBS3Buffer Schema
+        run: |
+          echo -e "\nDeploying DBS3Buffer schema..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/dbs3buffer/oracle/create_dbs3buffer.sql
+
+      - name: Deploy BossAir Schema
+        run: |
+          echo -e "\nDeploying BossAir schema..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/bossair/oracle/create_bossair.sql
+
+      - name: Deploy ResourceControl Schema
+        run: |
+          echo -e "\nDeploying ResourceControl schema..."
+          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/resourcecontrol/oracle/create_resourcecontrol.sql
+
+      - name: Verify Schema Deployment
+        run: |
+          echo -e "\nChecking table structure..."
+          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          SET LINESIZE 200
+          SET PAGESIZE 1000
+          SELECT table_name, tablespace_name 
+          FROM all_tables 
+          WHERE owner = UPPER('${SCHEMA_USER}')
+          ORDER BY table_name;
+          EXIT;
+          EOF
+
+          echo -e "\nChecking indexes..."
+          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          SET LINESIZE 200
+          SET PAGESIZE 1000
+          SELECT table_name, index_name, index_type
+          FROM all_indexes
+          WHERE owner = UPPER('${SCHEMA_USER}')
+          ORDER BY table_name, index_name;
+          EXIT;
+          EOF
+
+          echo -e "\nChecking foreign key relationships..."
+          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          SET LINESIZE 200
+          SET PAGESIZE 1000
+          SELECT a.table_name, a.constraint_name, a.column_name,
+                 c_pk.table_name r_table_name, b.column_name r_column_name
+          FROM all_cons_columns a
+          JOIN all_constraints c ON a.owner = c.owner
+                               AND a.constraint_name = c.constraint_name
+          JOIN all_constraints c_pk ON c.r_owner = c_pk.owner
+                                  AND c.r_constraint_name = c_pk.constraint_name
+          JOIN all_cons_columns b ON c_pk.owner = b.owner
+                                AND c_pk.constraint_name = b.constraint_name
+          WHERE c.constraint_type = 'R'
+            AND a.owner = UPPER('${SCHEMA_USER}')
+          ORDER BY a.table_name, a.column_name;
+          EXIT;
+          EOF
+
+          echo -e "\nChecking initial data..."
+          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          SET LINESIZE 200
+          SET PAGESIZE 1000
+          SELECT table_name, num_rows
+          FROM all_tables
+          WHERE owner = UPPER('${SCHEMA_USER}')
+            AND num_rows > 0
+          ORDER BY table_name;
+          EXIT;
+          EOF
+
+      - name: Cleanup
+        if: always()
+        continue-on-error: true
+        run: |
+          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          DROP USER ${SCHEMA_USER} CASCADE;
+          EXIT;
+          EOF
+          echo "Cleanup attempted - any errors above can be safely ignored" 
