@@ -48,17 +48,18 @@ jobs:
             counter=$((counter + 1))
             echo "Attempt $counter/$max_retries:"
 
-            echo "1. Testing connection from inside container..."
-            if docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << 'EOF'
-            SELECT 1 FROM dual;
-            exit;
-            EOF
+            echo "\nTesting connection from inside container..."
+            # Create a simple SQL file in the container
+            docker exec $CONTAINER_ID bash -c "echo 'SELECT 1 FROM dual;' > /tmp/wait.sql"
+
+            # Execute the SQL file
+            if docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/wait.sql
             then
               echo "Oracle is ready!"
               exit 0
             fi
 
-            echo "2. Container logs:"
+            echo "\nContainer logs:"
             docker logs $CONTAINER_ID
 
             if [ $counter -eq $max_retries ]; then
@@ -66,7 +67,7 @@ jobs:
               exit 51
             fi
 
-            echo "Waiting 10 seconds before next attempt..."
+            echo "\nWaiting 10 seconds before next attempt..."
             sleep 10
           done
 
@@ -74,17 +75,12 @@ jobs:
         run: |
           echo "Testing Oracle connection..."
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << 'EOF'
-          WHENEVER SQLERROR EXIT SQL.SQLCODE;
-          WHENEVER OSERROR EXIT 9;
-          SET ECHO ON
-          SET FEEDBACK ON
-          SET HEADING ON
-          SELECT 1 FROM dual;
-          SELECT sys_context('USERENV', 'SESSION_USER') FROM dual;
-          SELECT status FROM v\$instance;
-          EXIT SUCCESS
-          EOF
+
+          # Create a simple SQL file in the container
+          docker exec $CONTAINER_ID bash -c "echo 'SELECT 1 FROM dual;' > /tmp/test.sql"
+
+          # Execute the SQL file
+          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/test.sql
 
       - name: Deploy WMBS Schema
         run: |
@@ -120,31 +116,33 @@ jobs:
 
       - name: Verify Schema Deployment
         run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+
+          # Create query for tables
           echo -e "\nChecking table structure..."
-          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
-          SET LINESIZE 200
+          docker exec $CONTAINER_ID bash -c "echo 'SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT table_name, tablespace_name 
           FROM all_tables 
-          WHERE owner = UPPER('${SCHEMA_USER}')
+          WHERE owner = UPPER(\"${SCHEMA_USER}\")
           ORDER BY table_name;
-          EXIT;
-          EOF
+          EXIT;' > /tmp/tables.sql"
+          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/tables.sql
 
+          # Create query for indexes
           echo -e "\nChecking indexes..."
-          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
-          SET LINESIZE 200
+          docker exec $CONTAINER_ID bash -c "echo 'SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT table_name, index_name, index_type
           FROM all_indexes
-          WHERE owner = UPPER('${SCHEMA_USER}')
+          WHERE owner = UPPER(\"${SCHEMA_USER}\")
           ORDER BY table_name, index_name;
-          EXIT;
-          EOF
+          EXIT;' > /tmp/indexes.sql"
+          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/indexes.sql
 
+          # Create query for foreign keys
           echo -e "\nChecking foreign key relationships..."
-          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
-          SET LINESIZE 200
+          docker exec $CONTAINER_ID bash -c "echo 'SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT a.table_name, a.constraint_name, a.column_name,
                  c_pk.table_name r_table_name, b.column_name r_column_name
@@ -155,35 +153,31 @@ jobs:
                                   AND c.r_constraint_name = c_pk.constraint_name
           JOIN all_cons_columns b ON c_pk.owner = b.owner
                                 AND c_pk.constraint_name = b.constraint_name
-          WHERE c.constraint_type = 'R'
-            AND a.owner = UPPER('${SCHEMA_USER}')
+          WHERE c.constraint_type = \"R\"
+            AND a.owner = UPPER(\"${SCHEMA_USER}\")
           ORDER BY a.table_name, a.column_name;
-          EXIT;
-          EOF
+          EXIT;' > /tmp/fk.sql"
+          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/fk.sql
 
+          # Create query for data rows
           echo -e "\nChecking initial data..."
-          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
-          SET LINESIZE 200
+          docker exec $CONTAINER_ID bash -c "echo 'SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT table_name, num_rows
           FROM all_tables
-          WHERE owner = UPPER('${SCHEMA_USER}')
+          WHERE owner = UPPER(\"${SCHEMA_USER}\")
             AND num_rows > 0
           ORDER BY table_name;
-          EXIT;
-          EOF
+          EXIT;' > /tmp/data.sql"
+          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/data.sql
 
       - name: Cleanup
         if: always()
         continue-on-error: true
         run: |
-          if which sqlplus >/dev/null 2>&1; then
-            echo "Running cleanup..."
-            docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
-            DROP USER ${SCHEMA_USER} CASCADE;
-            EXIT;
-            EOF
-            echo "Cleanup completed"
-          else
-            echo "SQLPlus not available, skipping cleanup"
-          fi
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+          echo "Running cleanup..."
+          docker exec $CONTAINER_ID bash -c "echo 'DROP USER ${SCHEMA_USER} CASCADE;
+          EXIT;' > /tmp/cleanup.sql"
+          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/cleanup.sql
+          echo "Cleanup completed"
