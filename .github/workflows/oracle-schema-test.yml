@@ -76,9 +76,29 @@ jobs:
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           docker exec $CONTAINER_ID env
 
-          # Try connection to CDB
-          while ! sqlplus -s "sys/${ORACLE_PASSWORD}@localhost:1521/XE as sysdba" << EOF
-          SELECT status FROM v\$instance;
+          echo "Testing different connection formats..."
+
+          # Test 1: Easy Connect format
+          echo "Trying Easy Connect format..."
+          sqlplus -L "sys/${ORACLE_PASSWORD}@localhost:1521:XE as sysdba" << EOF || echo "Test 1 failed"
+          exit;
+          EOF
+
+          # Test 2: Basic format
+          echo "Trying basic format..."
+          sqlplus -L "sys/${ORACLE_PASSWORD}@//localhost:1521/XE as sysdba" << EOF || echo "Test 2 failed"
+          exit;
+          EOF
+
+          # Test 3: Container format
+          echo "Trying container format..."
+          sqlplus -L "system/${ORACLE_PASSWORD}@//localhost:1521/XE" << EOF || echo "Test 3 failed"
+          exit;
+          EOF
+
+          # Main connection loop
+          while ! sqlplus -s "system/${ORACLE_PASSWORD}@//localhost:1521/XE" << EOF
+          SELECT 1 FROM dual;
           exit;
           EOF
           do
