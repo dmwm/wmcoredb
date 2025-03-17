@@ -70,24 +70,26 @@ jobs:
           counter=0
           echo "Waiting for Oracle to be ready..."
 
-          # Check container environment
+          # Check container environment and status
           echo "Checking Oracle container environment..."
           docker ps
-          docker exec $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim") env
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+          docker exec $CONTAINER_ID env
+          docker logs $CONTAINER_ID
 
-          # Try connection with simplified format
-          while ! sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}@${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
+          # Try connection with Easy Connect format
+          while ! sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}@${ORACLE_HOST}:${ORACLE_PORT}/XEPDB1" << EOF
           exit;
           EOF
           do
             counter=$((counter + 1))
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for Oracle"
-              docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+              docker logs $CONTAINER_ID
               exit 51
             fi
             echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
-            sleep 10
+            sleep 20
           done
           echo "Oracle is ready!"
 
