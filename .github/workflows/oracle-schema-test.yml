@@ -39,7 +39,13 @@ jobs:
       - name: Install Oracle Instant Client
         run: |
           sudo apt-get update
-          sudo apt-get install -y alien libaio
+          # Install required packages
+          sudo apt-get install -y alien libaio1t64
+
+          # Create symbolic link for compatibility
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
+
+          # Download and install Oracle Instant Client
           wget https://download.oracle.com/otn_software/linux/instantclient/185000/oracle-instantclient-basic-18.5.0.0.0-3.x86_64.rpm
           sudo alien -i oracle-instantclient-basic-18.5.0.0.0-3.x86_64.rpm
           wget https://download.oracle.com/otn_software/linux/instantclient/185000/oracle-instantclient-sqlplus-18.5.0.0.0-3.x86_64.rpm
@@ -65,7 +71,7 @@ jobs:
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for Oracle"
               docker ps
-              docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:19-slim")
+              docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
               exit 1
             fi
             echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
