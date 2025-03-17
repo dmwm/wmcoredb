@@ -37,87 +37,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Oracle Instant Client
-        run: |
-          sudo apt-get update
-          # Install required packages
-          sudo apt-get install -y alien libaio1t64
-
-          # Create symbolic link for compatibility
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
-
-          # Download and install Oracle Instant Client 19.26
-          wget https://download.oracle.com/otn_software/linux/instantclient/1926000/oracle-instantclient19.26-basic-19.26.0.0.0-1.x86_64.rpm
-          sudo alien -i oracle-instantclient19.26-basic-19.26.0.0.0-1.x86_64.rpm
-          wget https://download.oracle.com/otn_software/linux/instantclient/1926000/oracle-instantclient19.26-sqlplus-19.26.0.0.0-1.x86_64.rpm
-          sudo alien -i oracle-instantclient19.26-sqlplus-19.26.0.0.0-1.x86_64.rpm
-
-          # Set up environment variables
-          echo "/usr/lib/oracle/19.26/client64/lib" | sudo tee /etc/ld.so.conf.d/oracle-instantclient.conf
-          sudo ldconfig
-          echo "export LD_LIBRARY_PATH=/usr/lib/oracle/19.26/client64/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-          echo "export PATH=/usr/lib/oracle/19.26/client64/bin:${PATH}" >> $GITHUB_ENV
-          echo "export ORACLE_HOME=/usr/lib/oracle/19.26/client64" >> $GITHUB_ENV
-
-      - name: Verify SQLPlus Installation
-        run: |
-          which sqlplus || echo "SQLPlus not found in PATH"
-          sqlplus -V || echo "SQLPlus version check failed"
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-
       - name: Wait for Oracle
         run: |
           max_retries=5
           counter=0
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo "Waiting for Oracle to be ready..."
 
-          # Check container environment and status
-          echo "Checking Oracle container environment..."
-          docker ps
-          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-          docker exec $CONTAINER_ID env
-
-          # Test connection from inside the container first
-          echo "Testing connection from inside container..."
-          docker exec $CONTAINER_ID sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}"@localhost:1521/XE << EOF || echo "Internal connection failed"
-          SELECT 1 FROM dual;
-          exit;
-          EOF
-
-          # Now test from outside with the same format that worked inside
-          while ! sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}"@localhost:1521/XE << EOF
-          SELECT 1 FROM dual;
-          exit;
-          EOF
-          do
+          while [ $counter -lt $max_retries ]; do
             counter=$((counter + 1))
-            if [ $counter -gt $max_retries ]; then
-              echo "Error: Timed out waiting for Oracle"
-              echo "Container logs:"
-              docker logs $CONTAINER_ID
-              echo "Container status:"
-              docker exec $CONTAINER_ID ps aux
-              echo "Container network:"
-              docker exec $CONTAINER_ID netstat -tulpn
+            echo "Attempt $counter/$max_retries:"
+
+            echo "1. Testing connection from inside container..."
+            if docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
+            SELECT 1 FROM dual;
+            exit;
+            EOF
+            then
+              echo "Oracle is ready!"
+              exit 0
+            fi
+
+            echo "2. Container logs:"
+            docker logs $CONTAINER_ID
+
+            if [ $counter -eq $max_retries ]; then
+              echo "Error: Maximum retries reached. Oracle connection failed."
               exit 51
             fi
-            echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
-            sleep 20
+
+            echo "Waiting 10 seconds before next attempt..."
+            sleep 10
           done
-          echo "Oracle is ready!"
 
       - name: Test Oracle Connection
         run: |
           echo "Testing Oracle connection..."
-          echo "Connection parameters:"
-          echo "ORACLE_USER: ${ORACLE_USER}"
-          echo "ORACLE_HOST: ${ORACLE_HOST}"
-          echo "ORACLE_PORT: ${ORACLE_PORT}"
-          echo "ORACLE_SERVICE: ${ORACLE_SERVICE}"
-
-          # Test connection with simplified format
-          {
-            sqlplus -L "${ORACLE_USER}/${ORACLE_PASSWORD}@${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << 'EOF'
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << 'EOF'
           WHENEVER SQLERROR EXIT SQL.SQLCODE;
           WHENEVER OSERROR EXIT 9;
           SET ECHO ON
@@ -128,47 +85,43 @@ jobs:
           SELECT status FROM v\$instance;
           EXIT SUCCESS
           EOF
-          } || {
-            echo "Failed to establish Oracle connection"
-            docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-            exit 51
-          }
 
       - name: Deploy WMBS Schema
         run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying WMBS tables..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/create_wmbs_tables.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/wmbs/oracle/create_wmbs_tables.sql
 
           echo -e "\nDeploying WMBS indexes..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/create_wmbs_indexes.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/wmbs/oracle/create_wmbs_indexes.sql
 
           echo -e "\nInitializing WMBS data..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/initial_wmbs_data.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/wmbs/oracle/initial_wmbs_data.sql
 
       - name: Deploy Agent Schema
         run: |
           echo -e "\nDeploying Agent schema..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/agent/oracle/create_agent.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/agent/oracle/create_agent.sql
 
       - name: Deploy DBS3Buffer Schema
         run: |
           echo -e "\nDeploying DBS3Buffer schema..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/dbs3buffer/oracle/create_dbs3buffer.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/dbs3buffer/oracle/create_dbs3buffer.sql
 
       - name: Deploy BossAir Schema
         run: |
           echo -e "\nDeploying BossAir schema..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/bossair/oracle/create_bossair.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/bossair/oracle/create_bossair.sql
 
       - name: Deploy ResourceControl Schema
         run: |
           echo -e "\nDeploying ResourceControl schema..."
-          sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/resourcecontrol/oracle/create_resourcecontrol.sql
+          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/resourcecontrol/oracle/create_resourcecontrol.sql
 
       - name: Verify Schema Deployment
         run: |
           echo -e "\nChecking table structure..."
-          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
           SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT table_name, tablespace_name 
@@ -179,7 +132,7 @@ jobs:
           EOF
 
           echo -e "\nChecking indexes..."
-          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
           SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT table_name, index_name, index_type
@@ -190,7 +143,7 @@ jobs:
           EOF
 
           echo -e "\nChecking foreign key relationships..."
-          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
           SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT a.table_name, a.constraint_name, a.column_name,
@@ -209,7 +162,7 @@ jobs:
           EOF
 
           echo -e "\nChecking initial data..."
-          sqlplus -s ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} << EOF
+          docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
           SET LINESIZE 200
           SET PAGESIZE 1000
           SELECT table_name, num_rows
@@ -226,7 +179,7 @@ jobs:
         run: |
           if which sqlplus >/dev/null 2>&1; then
             echo "Running cleanup..."
-            sqlplus -s "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
+            docker exec $CONTAINER_ID sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XE << EOF
             DROP USER ${SCHEMA_USER} CASCADE;
             EXIT;
             EOF
