@@ -89,6 +89,7 @@ jobs:
 
       - name: Deploy Agent Schema
         run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying Agent schema..."
           docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/agent/oracle/create_agent.sql
 
