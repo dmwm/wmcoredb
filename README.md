@@ -1,13 +1,17 @@
 [![SQL Linting](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml)
-[![Database Schema Deployment](https://github.com/amaltaro/wmcoredb/actions/workflows/schema-deploy.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/schema-deploy.yml)
+[![MariaDB Schema Validation](https://github.com/amaltaro/wmcoredb/actions/workflows/mariadb-schema-test.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/mariadb-schema-test.yml)
+[![Oracle Schema Validation](https://github.com/amaltaro/wmcoredb/actions/workflows/oracle-schema-test.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/oracle-schema-test.yml)
 
 # WMCore Database Schema
 
 Database schema definitions for WMCore components, including both MariaDB and Oracle backends.
 
+WMBS (Workload Management Bookkeeping Service) provides the database schema for managing 
+workloads and jobs.
+
 ## CI/CD Pipeline
 
-The continuous integration pipeline is split into two workflows:
+The continuous integration pipeline is split into three workflows:
 
 ### SQL Linting
 Validates SQL syntax and formatting using SQLFluff:
@@ -16,7 +20,7 @@ Validates SQL syntax and formatting using SQLFluff:
 * Enforces consistent SQL style and formatting
 * Runs on every push and pull request
 
-### Schema Deployment
+### MariaDB Schema Validation
 Automatically tests schema deployment in MariaDB:
 * Runs only after successful linting
 * Tests against multiple MariaDB versions:
@@ -31,6 +35,19 @@ Automatically tests schema deployment in MariaDB:
   - ResourceControl Schema
 * Verifies table structures and relationships
 * Checks for any critical database errors
+
+### Oracle Schema Validation
+Tests schema deployment in Oracle:
+* Runs only after successful linting
+* Uses Oracle XE 18.4.0-slim container
+* Deploys and validates the same schemas as the MariaDB workflow:
+  - WMBS Schema (tables, indexes, and initial data)
+  - Agent Schema
+  - DBS3Buffer Schema
+  - BossAir Schema
+  - ResourceControl Schema
+* Verifies table structures, indexes, foreign key relationships, and initial data
+* Ensures cross-database compatibility between MariaDB and Oracle backends
 
 ## Directory Structure
 
