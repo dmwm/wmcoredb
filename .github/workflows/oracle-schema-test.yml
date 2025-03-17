@@ -76,28 +76,15 @@ jobs:
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           docker exec $CONTAINER_ID env
 
-          echo "Testing different connection formats..."
-
-          # Test 1: Easy Connect format
-          echo "Trying Easy Connect format..."
-          sqlplus -L "sys/${ORACLE_PASSWORD}@localhost:1521:XE as sysdba" << EOF || echo "Test 1 failed"
+          # Test connection from inside the container first
+          echo "Testing connection from inside container..."
+          docker exec $CONTAINER_ID sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}"@localhost:1521/XE << EOF || echo "Internal connection failed"
+          SELECT 1 FROM dual;
           exit;
           EOF
 
-          # Test 2: Basic format
-          echo "Trying basic format..."
-          sqlplus -L "sys/${ORACLE_PASSWORD}@//localhost:1521/XE as sysdba" << EOF || echo "Test 2 failed"
-          exit;
-          EOF
-
-          # Test 3: Container format
-          echo "Trying container format..."
-          sqlplus -L "system/${ORACLE_PASSWORD}@//localhost:1521/XE" << EOF || echo "Test 3 failed"
-          exit;
-          EOF
-
-          # Main connection loop
-          while ! sqlplus -s "system/${ORACLE_PASSWORD}@//localhost:1521/XE" << EOF
+          # Now test from outside with the same format that worked inside
+          while ! sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}"@localhost:1521/XE << EOF
           SELECT 1 FROM dual;
           exit;
           EOF
@@ -105,7 +92,12 @@ jobs:
             counter=$((counter + 1))
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for Oracle"
+              echo "Container logs:"
               docker logs $CONTAINER_ID
+              echo "Container status:"
+              docker exec $CONTAINER_ID ps aux
+              echo "Container network:"
+              docker exec $CONTAINER_ID netstat -tulpn
               exit 51
             fi
             echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
