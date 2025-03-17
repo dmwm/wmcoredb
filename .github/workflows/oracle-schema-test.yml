@@ -95,16 +95,19 @@ jobs:
 
       - name: Deploy DBS3Buffer Schema
         run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying DBS3Buffer schema..."
           docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/dbs3buffer/oracle/create_dbs3buffer.sql
 
       - name: Deploy BossAir Schema
         run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying BossAir schema..."
           docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/bossair/oracle/create_bossair.sql
 
       - name: Deploy ResourceControl Schema
         run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying ResourceControl schema..."
           docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/resourcecontrol/oracle/create_resourcecontrol.sql
 
