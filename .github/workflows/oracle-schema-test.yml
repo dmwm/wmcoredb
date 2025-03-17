@@ -39,12 +39,12 @@ jobs:
       - name: Install Oracle Instant Client
         run: |
           sudo apt-get update
-          sudo apt-get install -y alien libaio1
-          wget https://download.oracle.com/otn_software/linux/instantclient/199000/oracle-instantclient-basic-19.9.0.0.0-1.el8.x86_64.rpm
-          sudo alien -i oracle-instantclient-basic-19.9.0.0.0-1.el8.x86_64.rpm
-          wget https://download.oracle.com/otn_software/linux/instantclient/199000/oracle-instantclient-sqlplus-19.9.0.0.0-1.el8.x86_64.rpm
-          sudo alien -i oracle-instantclient-sqlplus-19.9.0.0.0-1.el8.x86_64.rpm
-          echo "export LD_LIBRARY_PATH=/usr/lib/oracle/19.9/client64/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          sudo apt-get install -y alien libaio
+          wget https://download.oracle.com/otn_software/linux/instantclient/185000/oracle-instantclient-basic-18.5.0.0.0-3.x86_64.rpm
+          sudo alien -i oracle-instantclient-basic-18.5.0.0.0-3.x86_64.rpm
+          wget https://download.oracle.com/otn_software/linux/instantclient/185000/oracle-instantclient-sqlplus-18.5.0.0.0-3.x86_64.rpm
+          sudo alien -i oracle-instantclient-sqlplus-18.5.0.0.0-3.x86_64.rpm
+          echo "export LD_LIBRARY_PATH=/usr/lib/oracle/18.5/client64/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
       - name: Verify SQLPlus Installation
         run: |
