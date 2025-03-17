@@ -69,16 +69,22 @@ jobs:
           max_retries=5
           counter=0
           echo "Waiting for Oracle to be ready..."
-          while ! sqlplus -s "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
+
+          # Check container environment
+          echo "Checking Oracle container environment..."
+          docker ps
+          docker exec $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim") env
+
+          # Try connection with simplified format
+          while ! sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}@${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
           exit;
           EOF
           do
             counter=$((counter + 1))
             if [ $counter -gt $max_retries ]; then
               echo "Error: Timed out waiting for Oracle"
-              docker ps
               docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-              exit 1
+              exit 51
             fi
             echo "Attempt $counter/$max_retries: Oracle is not ready yet, waiting..."
             sleep 10
@@ -88,14 +94,15 @@ jobs:
       - name: Test Oracle Connection
         run: |
           echo "Testing Oracle connection..."
+          echo "Connection parameters:"
           echo "ORACLE_USER: ${ORACLE_USER}"
           echo "ORACLE_HOST: ${ORACLE_HOST}"
           echo "ORACLE_PORT: ${ORACLE_PORT}"
           echo "ORACLE_SERVICE: ${ORACLE_SERVICE}"
 
-          # Test connection with verbose output
+          # Test connection with simplified format
           {
-            sqlplus -L "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << 'EOF'
+            sqlplus -L "${ORACLE_USER}/${ORACLE_PASSWORD}@${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << 'EOF'
           WHENEVER SQLERROR EXIT SQL.SQLCODE;
           WHENEVER OSERROR EXIT 9;
           SET ECHO ON
@@ -109,24 +116,17 @@ jobs:
           } || {
             echo "Failed to establish Oracle connection"
             docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-            exit 51  # Unique exit code for Oracle connection failure
+            exit 51
           }
-
-          if [ $? -ne 0 ]; then
-            echo "Failed to connect to Oracle database. Check credentials and database status."
-            docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-            exit 51  # Same unique exit code for consistency
-          fi
-          echo "Oracle connection test successful!"
 
       - name: Deploy WMBS Schema
         run: |
           echo -e "\nDeploying WMBS tables..."
           sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/create_wmbs_tables.sql
-          
+
           echo -e "\nDeploying WMBS indexes..."
           sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/create_wmbs_indexes.sql
-          
+
           echo -e "\nInitializing WMBS data..."
           sqlplus ${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE} @sql/wmbs/oracle/initial_wmbs_data.sql
 
