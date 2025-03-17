@@ -75,10 +75,10 @@ jobs:
           docker ps
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           docker exec $CONTAINER_ID env
-          docker logs $CONTAINER_ID
 
-          # Try connection with Easy Connect format
-          while ! sqlplus -s "${ORACLE_USER}/${ORACLE_PASSWORD}@${ORACLE_HOST}:${ORACLE_PORT}/XEPDB1" << EOF
+          # Try connection to CDB
+          while ! sqlplus -s "sys/${ORACLE_PASSWORD}@localhost:1521/XE as sysdba" << EOF
+          SELECT status FROM v\$instance;
           exit;
           EOF
           do
