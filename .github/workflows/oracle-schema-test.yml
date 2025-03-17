@@ -21,6 +21,7 @@ jobs:
       oracle:
         image: gvenzl/oracle-xe:18.4.0-slim
         env:
+          ORACLE_USER: ${{ env.ORACLE_USER }}
           ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
           APP_USER: ${{ env.SCHEMA_USER }}
           APP_USER_PASSWORD: ${{ secrets.SCHEMA_PASSWORD }}
