@@ -94,11 +94,8 @@ jobs:
           echo "ORACLE_SERVICE: ${ORACLE_SERVICE}"
 
           # Test connection with verbose output
-          sqlplus -L "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF || {
-            echo "Failed to establish Oracle connection"
-            docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
-            exit 51  # Unique exit code for Oracle connection failure
-          }
+          {
+            sqlplus -L "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << 'EOF'
           WHENEVER SQLERROR EXIT SQL.SQLCODE;
           WHENEVER OSERROR EXIT 9;
           SET ECHO ON
@@ -107,8 +104,13 @@ jobs:
           SELECT 1 FROM dual;
           SELECT sys_context('USERENV', 'SESSION_USER') FROM dual;
           SELECT status FROM v\$instance;
-          EXIT SUCCESS;
+          EXIT SUCCESS
           EOF
+          } || {
+            echo "Failed to establish Oracle connection"
+            docker logs $(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+            exit 51  # Unique exit code for Oracle connection failure
+          }
 
           if [ $? -ne 0 ]; then
             echo "Failed to connect to Oracle database. Check credentials and database status."
