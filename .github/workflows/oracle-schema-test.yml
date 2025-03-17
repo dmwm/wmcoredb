@@ -50,7 +50,13 @@ jobs:
           sudo alien -i oracle-instantclient19.26-basic-19.26.0.0.0-1.x86_64.rpm
           wget https://download.oracle.com/otn_software/linux/instantclient/1926000/oracle-instantclient19.26-sqlplus-19.26.0.0.0-1.x86_64.rpm
           sudo alien -i oracle-instantclient19.26-sqlplus-19.26.0.0.0-1.x86_64.rpm
+
+          # Set up environment variables
+          echo "/usr/lib/oracle/19.26/client64/lib" | sudo tee /etc/ld.so.conf.d/oracle-instantclient.conf
+          sudo ldconfig
           echo "export LD_LIBRARY_PATH=/usr/lib/oracle/19.26/client64/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          echo "export PATH=/usr/lib/oracle/19.26/client64/bin:${PATH}" >> $GITHUB_ENV
+          echo "export ORACLE_HOME=/usr/lib/oracle/19.26/client64" >> $GITHUB_ENV
 
       - name: Verify SQLPlus Installation
         run: |
@@ -60,7 +66,7 @@ jobs:
 
       - name: Wait for Oracle
         run: |
-          max_retries=30
+          max_retries=5
           counter=0
           echo "Waiting for Oracle to be ready..."
           while ! sqlplus -s "${ORACLE_USER}/\"${ORACLE_PASSWORD}\"@//${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}" << EOF
