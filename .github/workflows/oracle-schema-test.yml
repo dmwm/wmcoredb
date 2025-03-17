@@ -10,21 +10,14 @@ jobs:
   validate-oracle-schema:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    env:
-      ORACLE_HOST: localhost
-      ORACLE_PORT: 1521
-      ORACLE_SERVICE: XE
-      ORACLE_USER: system
-      SCHEMA_USER: wmagent
 
     services:
       oracle:
         image: gvenzl/oracle-xe:18.4.0-slim
         env:
-          ORACLE_USER: ${{ env.ORACLE_USER }}
-          ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
-          APP_USER: ${{ env.SCHEMA_USER }}
-          APP_USER_PASSWORD: ${{ secrets.SCHEMA_PASSWORD }}
+          ORACLE_PASSWORD: oracle
+          APP_USER: wmagent
+          APP_USER_PASSWORD: wmagent
         ports:
           - 1521:1521
         options: >-
@@ -46,20 +39,20 @@ jobs:
 
           while [ $counter -lt $max_retries ]; do
             counter=$((counter + 1))
-            echo "Attempt $counter/$max_retries:"
+            echo -e "Attempt $counter/$max_retries:"
 
-            echo "\nTesting connection from inside container..."
+            echo -e "Testing connection from inside container..."
             # Create a simple SQL file in the container
             docker exec $CONTAINER_ID bash -c "echo 'SELECT 1 FROM dual;' > /tmp/wait.sql"
 
-            # Execute the SQL file
-            if docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/wait.sql
+            # Execute the SQL file with hardcoded credentials
+            if docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/wait.sql
             then
               echo "Oracle is ready!"
               exit 0
             fi
 
-            echo "\nContainer logs:"
+            echo -e "Container logs:"
             docker logs $CONTAINER_ID
 
             if [ $counter -eq $max_retries ]; then
@@ -67,7 +60,7 @@ jobs:
               exit 51
             fi
 
-            echo "\nWaiting 10 seconds before next attempt..."
+            echo -e "Waiting 10 seconds before next attempt..."
             sleep 10
           done
 
@@ -79,40 +72,40 @@ jobs:
           # Create a simple SQL file in the container
           docker exec $CONTAINER_ID bash -c "echo 'SELECT 1 FROM dual;' > /tmp/test.sql"
 
-          # Execute the SQL file
-          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/test.sql
+          # Execute the SQL file with hardcoded credentials
+          docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/test.sql
 
       - name: Deploy WMBS Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying WMBS tables..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/wmbs/oracle/create_wmbs_tables.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/wmbs/oracle/create_wmbs_tables.sql
 
           echo -e "\nDeploying WMBS indexes..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/wmbs/oracle/create_wmbs_indexes.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/wmbs/oracle/create_wmbs_indexes.sql
 
           echo -e "\nInitializing WMBS data..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/wmbs/oracle/initial_wmbs_data.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/wmbs/oracle/initial_wmbs_data.sql
 
       - name: Deploy Agent Schema
         run: |
           echo -e "\nDeploying Agent schema..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/agent/oracle/create_agent.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/agent/oracle/create_agent.sql
 
       - name: Deploy DBS3Buffer Schema
         run: |
           echo -e "\nDeploying DBS3Buffer schema..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/dbs3buffer/oracle/create_dbs3buffer.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/dbs3buffer/oracle/create_dbs3buffer.sql
 
       - name: Deploy BossAir Schema
         run: |
           echo -e "\nDeploying BossAir schema..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/bossair/oracle/create_bossair.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/bossair/oracle/create_bossair.sql
 
       - name: Deploy ResourceControl Schema
         run: |
           echo -e "\nDeploying ResourceControl schema..."
-          docker exec $CONTAINER_ID sqlplus system/${ORACLE_PASSWORD}@localhost:1521/XE @sql/resourcecontrol/oracle/create_resourcecontrol.sql
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/resourcecontrol/oracle/create_resourcecontrol.sql
 
       - name: Verify Schema Deployment
         run: |
@@ -124,10 +117,10 @@ jobs:
           SET PAGESIZE 1000
           SELECT table_name, tablespace_name 
           FROM all_tables 
-          WHERE owner = UPPER(\"${SCHEMA_USER}\")
+          WHERE owner = UPPER(\"wmagent\")
           ORDER BY table_name;
           EXIT;' > /tmp/tables.sql"
-          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/tables.sql
+          docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/tables.sql
 
           # Create query for indexes
           echo -e "\nChecking indexes..."
@@ -135,10 +128,10 @@ jobs:
           SET PAGESIZE 1000
           SELECT table_name, index_name, index_type
           FROM all_indexes
-          WHERE owner = UPPER(\"${SCHEMA_USER}\")
+          WHERE owner = UPPER(\"wmagent\")
           ORDER BY table_name, index_name;
           EXIT;' > /tmp/indexes.sql"
-          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/indexes.sql
+          docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/indexes.sql
 
           # Create query for foreign keys
           echo -e "\nChecking foreign key relationships..."
@@ -154,10 +147,10 @@ jobs:
           JOIN all_cons_columns b ON c_pk.owner = b.owner
                                 AND c_pk.constraint_name = b.constraint_name
           WHERE c.constraint_type = \"R\"
-            AND a.owner = UPPER(\"${SCHEMA_USER}\")
+            AND a.owner = UPPER(\"wmagent\")
           ORDER BY a.table_name, a.column_name;
           EXIT;' > /tmp/fk.sql"
-          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/fk.sql
+          docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/fk.sql
 
           # Create query for data rows
           echo -e "\nChecking initial data..."
@@ -165,11 +158,11 @@ jobs:
           SET PAGESIZE 1000
           SELECT table_name, num_rows
           FROM all_tables
-          WHERE owner = UPPER(\"${SCHEMA_USER}\")
+          WHERE owner = UPPER(\"wmagent\")
             AND num_rows > 0
           ORDER BY table_name;
           EXIT;' > /tmp/data.sql"
-          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/data.sql
+          docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/data.sql
 
       - name: Cleanup
         if: always()
@@ -177,7 +170,7 @@ jobs:
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo "Running cleanup..."
-          docker exec $CONTAINER_ID bash -c "echo 'DROP USER ${SCHEMA_USER} CASCADE;
+          docker exec $CONTAINER_ID bash -c "echo 'DROP USER wmagent CASCADE;
           EXIT;' > /tmp/cleanup.sql"
-          docker exec $CONTAINER_ID sqlplus -s "system/${ORACLE_PASSWORD}@localhost:1521/XE" @/tmp/cleanup.sql
+          docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/cleanup.sql
           echo "Cleanup completed"
