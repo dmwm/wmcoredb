@@ -18,6 +18,7 @@ INSERT INTO wmbs_job_state (id, name) VALUES (wmbs_job_state_SEQ.nextval, 'submi
 INSERT INTO wmbs_job_state (id, name) VALUES (wmbs_job_state_SEQ.nextval, 'jobcooloff');
 INSERT INTO wmbs_job_state (id, name) VALUES (wmbs_job_state_SEQ.nextval, 'jobfailed');
 INSERT INTO wmbs_job_state (id, name) VALUES (wmbs_job_state_SEQ.nextval, 'jobpaused');
+INSERT INTO wmbs_job_state (id, name) VALUES (wmbs_job_state_SEQ.nextval, 'cleanout');
 
 -- Subscription types
 INSERT INTO wmbs_sub_types (id, name, priority) VALUES (wmbs_sub_types_SEQ.nextval, 'Production', 0);

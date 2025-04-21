@@ -18,6 +18,7 @@ INSERT INTO wmbs_job_state (name) VALUES ('submitpaused');
 INSERT INTO wmbs_job_state (name) VALUES ('jobcooloff');
 INSERT INTO wmbs_job_state (name) VALUES ('jobfailed');
 INSERT INTO wmbs_job_state (name) VALUES ('jobpaused');
+INSERT INTO wmbs_job_state (name) VALUES ('cleanout');
 
 -- Subscription types
 INSERT INTO wmbs_sub_types (name, priority) VALUES ('Production', 0);
