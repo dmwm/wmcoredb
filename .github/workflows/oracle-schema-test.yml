@@ -87,6 +87,21 @@ jobs:
           echo -e "\nInitializing WMBS data..."
           docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/wmbs/oracle/initial_wmbs_data.sql
 
+      - name: Deploy Tier0 Schema
+        run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+          echo -e "\nDeploying Tier0 tables..."
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/tier0/oracle/create_tier0_tables.sql
+
+          echo -e "\nDeploying Tier0 indexes..."
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/tier0/oracle/create_tier0_indexes.sql
+
+          echo -e "\nDeploying Tier0 functions..."
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/tier0/oracle/create_tier0_functions.sql
+
+          echo -e "\nInitializing Tier0 data..."
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/tier0/oracle/initial_tier0_data.sql
+
       - name: Deploy Agent Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
