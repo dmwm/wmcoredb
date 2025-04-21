@@ -56,9 +56,23 @@ The database schema files are organized as follows:
 ```
 project_root/
 ├── sql/                   # Database schema files
-│   ├── wmbs/              # WMCore.WMBS schema
-│   │   ├── oracle/
-│   │   └── mariadb/
+│   ├── tier0/             # Tier0 schema definitions
+│   │   ├── oracle/       # Oracle-specific Tier0 SQL files
+│   │   │   ├── create_tier0_tables.sql    # Table definitions with constraints
+│   │   │   ├── create_tier0_indexes.sql   # Index definitions
+│   │   │   ├── create_tier0_functions.sql # Helper functions
+│   │   │   └── initial_tier0_data.sql     # Initial data for Tier0 tables
+│   │   └── mariadb/      # MariaDB-specific Tier0 SQL files: NOT IMPLEMENTED
+│   ├── wmbs/              # WMBS schema definitions
+│   │   ├── oracle/       # Oracle-specific WMBS SQL files
+│   │   │   ├── create_wmbs_tables.sql     # Table definitions with constraints
+│   │   │   ├── create_wmbs_indexes.sql    # Index definitions
+│   │   │   ├── create_wmbs_sequences.sql  # Sequence definitions
+│   │   │   └── create_wmbs_functions.sql  # Helper functions
+│   │   └── mariadb/      # MariaDB-specific WMBS SQL files
+│   │       ├── create_wmbs_tables.sql     # Table definitions with constraints
+│   │       ├── create_wmbs_indexes.sql    # Index definitions
+│   │       └── create_wmbs_functions.sql  # Helper functions
 │   ├── agent/             # WMCore.Agent.Database schema
 │   │   ├── oracle/
 │   │   └── mariadb/
@@ -243,3 +257,93 @@ We welcome contributions to WMCoreDB! Please see our [Contributing Guidelines](C
 - Release process
 - Development workflow
 - Code style guidelines
+
+## Tier0 Schema
+
+The Tier0 schema is designed to support the Tier0 data processing system. It includes tables for:
+
+- Run management and tracking
+- Stream and dataset associations
+- Lumi section processing
+- Configuration management
+- Workflow monitoring
+
+### Oracle Implementation
+
+The Oracle implementation uses modern features like:
+- IDENTITY columns for auto-incrementing IDs
+- Inline foreign key constraints
+- Organization index tables for performance
+- Deterministic functions for state validation
+
+The schema initialization includes:
+- Table definitions with constraints
+- Index definitions for performance
+- Helper functions for state validation
+- Initial data for run states, processing styles, and event scenarios
+
+### MariaDB Implementation
+
+Tier0 system does not - yet - support multiple database backends. For the moment, we have not converted the Tier0 schema to be compliant with MariaDB/MySQL.
+
+## WMBS Schema
+
+The WMBS (Workload Management Bookkeeping System) schema is designed to track and manage workflows and jobs. It includes tables for:
+
+- Workflow and job tracking
+- File and dataset management
+- Subscription and processing information
+- Job state and status tracking
+
+### Oracle Implementation
+
+The Oracle implementation uses:
+- Sequences for ID generation
+- Foreign key constraints
+- Organization index tables
+- Deterministic functions
+
+### MariaDB Implementation
+
+The MariaDB implementation provides equivalent functionality using:
+- AUTO_INCREMENT for ID generation
+- Foreign key constraints
+- Appropriate indexes
+- Compatible function definitions
+
+## Database Compatibility
+
+The SQL files are designed to be compatible with:
+- Oracle 19c
+- MariaDB 10.6.21
+
+## Usage
+
+To create the database schema:
+
+1. For Oracle:
+```sql
+@sql/oracle/create_oracle.sql
+@sql/tier0/oracle/create_tier0_tables.sql
+@sql/tier0/oracle/create_tier0_indexes.sql
+@sql/tier0/oracle/create_tier0_functions.sql
+@sql/tier0/oracle/initial_tier0_data.sql
+@sql/wmbs/oracle/create_wmbs_tables.sql
+@sql/wmbs/oracle/create_wmbs_indexes.sql
+@sql/wmbs/oracle/create_wmbs_sequences.sql
+@sql/wmbs/oracle/create_wmbs_functions.sql
+```
+
+2. For MariaDB:
+```sql
+source sql/tier0/mariadb/create_tier0_tables.sql
+source sql/tier0/mariadb/create_tier0_indexes.sql
+source sql/tier0/mariadb/create_tier0_functions.sql
+source sql/wmbs/mariadb/create_wmbs_tables.sql
+source sql/wmbs/mariadb/create_wmbs_indexes.sql
+source sql/wmbs/mariadb/create_wmbs_functions.sql
+```
+
+## License
+
+This project is licensed under the terms of the Apache License 2.0.
