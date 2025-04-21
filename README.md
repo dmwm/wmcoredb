@@ -235,3 +235,11 @@ The `wmcore-db-init` script itself calls the [WMInit.py](https://github.com/dmwm
 wmInit = WMInit()
 wmInit.setLogging('wmcoreD', 'wmcoreD', logExists = False, logLevel = logging.DEBUG)
 ```
+
+## Contributing
+
+We welcome contributions to WMCoreDB! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+- Commit message conventions
+- Release process
+- Development workflow
+- Code style guidelines
