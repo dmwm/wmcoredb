@@ -145,7 +145,7 @@ CREATE TABLE wmbs_workflow_output (
     output_identifier    VARCHAR(255) NOT NULL,
     output_fileset       INTEGER      NOT NULL,
     merged_output_fileset INTEGER,
-    CONSTRAINT wmbs_workflow_output_pk PRIMARY KEY (workflow_id, output_identifier),
+    CONSTRAINT wmbs_workflow_output_pk PRIMARY KEY (workflow_id, output_identifier, output_fileset),
     CONSTRAINT wmbs_workflow_output_fk1 FOREIGN KEY (workflow_id) 
         REFERENCES wmbs_workflow(id) ON DELETE CASCADE,
     CONSTRAINT wmbs_workflow_output_fk2 FOREIGN KEY (output_fileset) 
