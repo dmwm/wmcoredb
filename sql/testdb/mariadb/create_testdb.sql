@@ -11,30 +11,26 @@ DROP TABLE IF EXISTS test_bigcol;
 CREATE TABLE test_tablea (
     column1 INT,
     column2 INT,
-    column3 VARCHAR(255),
-    PRIMARY KEY (column1)
+    column3 VARCHAR(255)
 ) ENGINE=InnoDB COMMENT='Test table A with integer and varchar columns';
 
 -- Create test_tableb
 CREATE TABLE test_tableb (
     column1 VARCHAR(255),
     column2 INT,
-    column3 VARCHAR(255),
-    PRIMARY KEY (column1)
+    column3 VARCHAR(255)
 ) ENGINE=InnoDB COMMENT='Test table B with varchar and integer columns';
 
 -- Create test_tablec
 CREATE TABLE test_tablec (
     column1 VARCHAR(255),
     column2 VARCHAR(255),
-    column3 VARCHAR(255),
-    PRIMARY KEY (column1)
+    column3 VARCHAR(255)
 ) ENGINE=InnoDB COMMENT='Test table C with varchar columns';
 
 -- Create test_bigcol
 CREATE TABLE test_bigcol (
-    column1 DECIMAL(35,0),
-    PRIMARY KEY (column1)
+    column1 DECIMAL(35,0)
 ) ENGINE=InnoDB COMMENT='Test table with large decimal column';
 
 -- Add column comments using ALTER TABLE
