@@ -28,6 +28,7 @@ Automatically tests schema deployment in MariaDB:
   - 10.11 (LTS)
   - 11.4 (Latest)
 * Deploys and validates:
+  - TestDB Schema
   - WMBS Schema
   - Agent Schema
   - DBS3Buffer Schema
@@ -41,6 +42,7 @@ Tests schema deployment in Oracle:
 * Runs only after successful linting
 * Uses Oracle XE 18.4.0-slim container
 * Deploys and validates the same schemas as the MariaDB workflow:
+  - TestDB Schema
   - WMBS Schema (tables, indexes, and initial data)
   - Agent Schema
   - DBS3Buffer Schema
@@ -85,6 +87,11 @@ project_root/
 │   └── resourcecontrol/   # WMCore.ResourceControl schema
 │       ├── oracle/
 │       └── mariadb/
+│   └── testdb/            # WMQuality.TestDB schema
+│       ├── oracle/
+│       │   └── create_testdb.sql  # Test table definitions
+│       └── mariadb/
+│           └── create_testdb.sql  # Test table definitions
 └── src/
     └── python/
         └── db/            # Schema generation code
@@ -93,6 +100,7 @@ project_root/
             ├── bossair/
             ├── dbs3buffer/
             ├── resourcecontrol/
+            └── testdb/
             └── execute_wmbs_sql.py
 ```
 
@@ -120,6 +128,12 @@ The WMAgent database schema consists of several components:
 5. **ResourceControl** (`sql/resourcecontrol/`)
    - Site and resource management
    - Threshold control
+
+6. **Test Database** (`sql/testdb/`)
+   - Simple test tables for database validation
+   - Used for testing database connectivity and basic operations
+   - Includes tables with different data types and constraints
+   - Available for both Oracle and MariaDB backends
 
 ## WMBS Schema Initialization
 
@@ -167,7 +181,7 @@ The schema files can be executed using `execute_wmbs_sql.py`, which handles:
 - Transaction management
 - Error handling
 
-# Logs
+## Logs
 
 Some relevant logs from the WMAgent 2.3.9.2 installation:
 ```
@@ -192,7 +206,7 @@ _sql_write_agentid: Inserting current Agent's build id and hostname at database:
 _sql_dumpSchema: Dumping the current SQL schema of database: wmagent to /data/srv/wmagent/2.3.9/config/.wmaSchemaFile.sql
 Done: Performing init_agent
 ```
-# WMAgent DB Initialization
+## WMAgent DB Initialization
 
 It starts in the CMSKubernetes [init.sh](https://github.com/dmwm/CMSKubernetes/blob/master/docker/pypi/wmagent/init.sh#L465) script, which executes `init_agent()` method from the CMSKubernetes [manage](https://github.com/dmwm/CMSKubernetes/blob/master/docker/pypi/wmagent/bin/manage#L112) script.
 
@@ -258,6 +272,70 @@ We welcome contributions to WMCoreDB! Please see our [Contributing Guidelines](C
 - Development workflow
 - Code style guidelines
 
+## Database Compatibility
+
+The SQL files are designed to be compatible with:
+- Oracle 19c
+- MariaDB 10.6.21
+
+## Usage
+
+To create the database schema:
+
+1. For Oracle:
+```sql
+@sql/oracle/create_oracle.sql
+@sql/testdb/oracle/create_testdb.sql
+@sql/tier0/oracle/create_tier0_tables.sql
+@sql/tier0/oracle/create_tier0_indexes.sql
+@sql/tier0/oracle/create_tier0_functions.sql
+@sql/tier0/oracle/initial_tier0_data.sql
+@sql/wmbs/oracle/create_wmbs_tables.sql
+@sql/wmbs/oracle/create_wmbs_indexes.sql
+@sql/wmbs/oracle/create_wmbs_sequences.sql
+@sql/wmbs/oracle/create_wmbs_functions.sql
+```
+
+2. For MariaDB:
+```sql
+source sql/testdb/mariadb/create_testdb.sql
+source sql/tier0/mariadb/create_tier0_tables.sql
+source sql/tier0/mariadb/create_tier0_indexes.sql
+source sql/tier0/mariadb/create_tier0_functions.sql
+source sql/wmbs/mariadb/create_wmbs_tables.sql
+source sql/wmbs/mariadb/create_wmbs_indexes.sql
+source sql/wmbs/mariadb/create_wmbs_functions.sql
+```
+
+## License
+
+This project is licensed under the terms of the Apache License 2.0.
+
+## WMBS Schema
+
+The WMBS (Workload Management Bookkeeping System) schema is designed to track and manage workflows and jobs. It includes tables for:
+
+- Workflow and job tracking
+- File and dataset management
+- Subscription and processing information
+- Job state and status tracking
+
+### Oracle Implementation
+
+The Oracle implementation uses:
+- Sequences for ID generation
+- Foreign key constraints
+- Organization index tables
+- Deterministic functions
+
+### MariaDB Implementation
+
+The MariaDB implementation provides equivalent functionality using:
+- AUTO_INCREMENT for ID generation
+- Foreign key constraints
+- Appropriate indexes
+- Compatible function definitions
+
 ## Tier0 Schema
 
 The Tier0 schema is designed to support the Tier0 data processing system. It includes tables for:
@@ -286,64 +364,27 @@ The schema initialization includes:
 
 Tier0 system does not - yet - support multiple database backends. For the moment, we have not converted the Tier0 schema to be compliant with MariaDB/MySQL.
 
-## WMBS Schema
+## Test Database Schema
 
-The WMBS (Workload Management Bookkeeping System) schema is designed to track and manage workflows and jobs. It includes tables for:
+The Test Database schema provides a simple set of tables for testing database connectivity and basic operations. It includes:
 
-- Workflow and job tracking
-- File and dataset management
-- Subscription and processing information
-- Job state and status tracking
+- Tables with different data types (INT, VARCHAR, DECIMAL)
+- Primary key constraints
+- Table and column comments
+- Cross-database compatibility
 
 ### Oracle Implementation
 
 The Oracle implementation uses:
-- Sequences for ID generation
-- Foreign key constraints
-- Organization index tables
-- Deterministic functions
+- NUMBER for numeric columns
+- VARCHAR2 for string columns
+- Table and column comments
+- Primary key constraints
 
 ### MariaDB Implementation
 
 The MariaDB implementation provides equivalent functionality using:
-- AUTO_INCREMENT for ID generation
-- Foreign key constraints
-- Appropriate indexes
-- Compatible function definitions
-
-## Database Compatibility
-
-The SQL files are designed to be compatible with:
-- Oracle 19c
-- MariaDB 10.6.21
-
-## Usage
-
-To create the database schema:
-
-1. For Oracle:
-```sql
-@sql/oracle/create_oracle.sql
-@sql/tier0/oracle/create_tier0_tables.sql
-@sql/tier0/oracle/create_tier0_indexes.sql
-@sql/tier0/oracle/create_tier0_functions.sql
-@sql/tier0/oracle/initial_tier0_data.sql
-@sql/wmbs/oracle/create_wmbs_tables.sql
-@sql/wmbs/oracle/create_wmbs_indexes.sql
-@sql/wmbs/oracle/create_wmbs_sequences.sql
-@sql/wmbs/oracle/create_wmbs_functions.sql
-```
-
-2. For MariaDB:
-```sql
-source sql/tier0/mariadb/create_tier0_tables.sql
-source sql/tier0/mariadb/create_tier0_indexes.sql
-source sql/tier0/mariadb/create_tier0_functions.sql
-source sql/wmbs/mariadb/create_wmbs_tables.sql
-source sql/wmbs/mariadb/create_wmbs_indexes.sql
-source sql/wmbs/mariadb/create_wmbs_functions.sql
-```
-
-## License
-
-This project is licensed under the terms of the Apache License 2.0.
+- INT and DECIMAL for numeric columns
+- VARCHAR for string columns
+- InnoDB engine specification
+- Compatible comment syntax
