@@ -75,6 +75,12 @@ jobs:
           # Execute the SQL file with hardcoded credentials
           docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/test.sql
 
+      - name: Deploy TestDB Schema
+        run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+          echo -e "\nDeploying TestDB schema..."
+          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/testdb/oracle/create_testdb.sql
+
       - name: Deploy WMBS Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")

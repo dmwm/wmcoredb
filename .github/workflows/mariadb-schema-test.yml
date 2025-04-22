@@ -75,6 +75,11 @@ jobs:
           done
           echo "MariaDB is ready!"
 
+      - name: Deploy TestDB Schema
+        run: |
+          set -e  # Exit immediately if a command exits with a non-zero status
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/testdb/mariadb/create_testdb.sql || exit 1
+
       - name: Deploy WMBS Schema
         run: |
           set -e  # Exit immediately if a command exits with a non-zero status
