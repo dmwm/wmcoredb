@@ -252,7 +252,7 @@ CREATE TABLE wmbs_job (
     name         VARCHAR2(255),
     state        NUMBER(11)     NOT NULL,
     state_time   NUMBER(11)     NOT NULL,
-    retry_count  NUMBER(3)     DEFAULT 0,
+    retry_count  NUMBER(6)     DEFAULT 0,
     couch_record VARCHAR2(255),
     location     NUMBER(11),
     outcome      NUMBER(11)     DEFAULT 0,
