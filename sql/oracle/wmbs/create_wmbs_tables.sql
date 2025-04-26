@@ -279,13 +279,13 @@ CREATE TABLE wmbs_job_assoc (
 );
 
 CREATE TABLE wmbs_job_mask (
-    job           NUMBER(11) NOT NULL,
+    job           NUMBER(15) NOT NULL,
     FirstEvent    NUMBER(20),
     LastEvent     NUMBER(20),
-    FirstLumi     NUMBER(11),
-    LastLumi      NUMBER(11),
-    FirstRun      NUMBER(11),
-    LastRun       NUMBER(11),
+    FirstLumi     NUMBER(15),
+    LastLumi      NUMBER(15),
+    FirstRun      NUMBER(15),
+    LastRun       NUMBER(15),
     inclusivemask NUMBER(1)  DEFAULT 1,
     CONSTRAINT wmbs_job_mask_fk FOREIGN KEY (job) 
         REFERENCES wmbs_job(id) ON DELETE CASCADE
