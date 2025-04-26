@@ -132,8 +132,8 @@ CREATE TABLE dbsbuffer_checksum_type (
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE dbsbuffer_file_checksums (
-    fileid INT,
-    typeid INT,
+    fileid INT    NOT NULL,
+    typeid INT    NOT NULL,
     cksum  VARCHAR(100),
     PRIMARY KEY (fileid, typeid),
     FOREIGN KEY (fileid) REFERENCES dbsbuffer_file(id) ON DELETE CASCADE,
