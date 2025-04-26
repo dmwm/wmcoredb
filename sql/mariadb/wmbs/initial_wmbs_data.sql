@@ -39,5 +39,3 @@ INSERT INTO wmbs_location_state (name) VALUES ('Aborted');
 INSERT INTO wmbs_checksum_type (type) VALUES ('cksum');
 INSERT INTO wmbs_checksum_type (type) VALUES ('adler32');
 INSERT INTO wmbs_checksum_type (type) VALUES ('md5');
-
--- ... rest of the initial data inserts ... 
