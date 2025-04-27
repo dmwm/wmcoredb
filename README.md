@@ -164,6 +164,33 @@ The schema supports two database backends:
   - Uses `ENGINE=InnoDB ROW_FORMAT=DYNAMIC`
   - Includes equivalent functionality without sequences
 
+## Database Compatibility
+
+The SQL files are designed to be compatible with:
+
+### MariaDB
+- 10.6 (LTS)
+- 10.11 (LTS)
+- 11.4 (Latest)
+
+### Oracle
+- Oracle XE 18.4.0-slim container
+- Oracle 19c
+
+The CI pipeline automatically tests schema deployment against these versions to ensure compatibility.
+
+## Database Documentation
+
+For detailed database documentation, including Entity Relationship Diagrams (ERD), schema initialization flows, and module-specific diagrams, please refer to the [diagrams documentation](diagrams/README.md).
+
+## Contributing
+
+We welcome contributions to WMCoreDB! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+- Commit message conventions
+- Release process
+- Development workflow
+- Code style guidelines
+
 ## Usage
 
 To create the database schema:
@@ -293,45 +320,6 @@ wmInit = WMInit()
 wmInit.setLogging('wmcoreD', 'wmcoreD', logExists = False, logLevel = logging.DEBUG)
 ```
 
-## Contributing
-
-We welcome contributions to WMCoreDB! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
-- Commit message conventions
-- Release process
-- Development workflow
-- Code style guidelines
-
-## Database Compatibility
-
-The SQL files are designed to be compatible with:
-- Oracle 19c
-- MariaDB 10.6.21
-
-## WMBS Schema
-
-The WMBS (Workload Management Bookkeeping System) schema is designed to track and manage workflows and jobs. It includes tables for:
-
-- Workflow and job tracking
-- File and dataset management
-- Subscription and processing information
-- Job state and status tracking
-
-### Oracle Implementation
-
-The Oracle implementation uses:
-- Sequences for ID generation
-- Foreign key constraints
-- Organization index tables
-- Deterministic functions
-
-### MariaDB Implementation
-
-The MariaDB implementation provides equivalent functionality using:
-- AUTO_INCREMENT for ID generation
-- Foreign key constraints
-- Appropriate indexes
-- Compatible function definitions
-
 ## Tier0 Schema
 
 The Tier0 schema is designed to support the Tier0 data processing system. It includes tables for:
@@ -384,3 +372,43 @@ The MariaDB implementation provides equivalent functionality using:
 - VARCHAR for string columns
 - InnoDB engine specification
 - Compatible comment syntax
+
+## ERD Diagram
+
+```mermaid
+erDiagram
+    %% Core Entities
+    wmbs_workflow ||--o{ wmbs_subscription : "has"
+    wmbs_workflow ||--o{ wmbs_workflow_output : "produces"
+    wmbs_fileset ||--o{ wmbs_subscription : "used_in"
+    wmbs_fileset ||--o{ wmbs_fileset_files : "contains"
+    wmbs_file_details ||--o{ wmbs_fileset_files : "referenced_by"
+    wmbs_file_details ||--o{ wmbs_file_parent : "child"
+    wmbs_file_details ||--o{ wmbs_file_parent : "parent"
+    wmbs_file_details ||--o{ wmbs_file_location : "located_at"
+    wmbs_file_details ||--o{ wmbs_file_runlumi_map : "has"
+    wmbs_file_details ||--o{ wmbs_file_checksums : "has"
+
+    %% Job Management
+    wmbs_subscription ||--o{ wmbs_jobgroup : "contains"
+    wmbs_jobgroup ||--o{ wmbs_job : "contains"
+    wmbs_job ||--o{ wmbs_job_assoc : "has"
+    wmbs_job ||--o{ wmbs_job_mask : "has"
+    wmbs_job ||--o{ wmbs_job_workunit_assoc : "has"
+
+    %% Location and Resource Management
+    wmbs_location ||--o{ wmbs_location_pnns : "has"
+    wmbs_pnns ||--o{ wmbs_location_pnns : "used_in"
+    wmbs_location ||--o{ wmbs_subscription_validation : "validates"
+    wmbs_location ||--o{ wmbs_job : "executes"
+    wmbs_location_state ||--o{ wmbs_location : "has_state"
+
+    %% Work Unit Management
+    wmbs_workunit ||--o{ wmbs_job_workunit_assoc : "assigned_to"
+    wmbs_workunit ||--o{ wmbs_frl_workunit_assoc : "assigned_to"
+
+    %% BossAir Module
+    bl_status ||--o{ bl_runjob : "has"
+    wmbs_job ||--o{ bl_runjob : "tracked_by"
+    wmbs_users ||--o{ bl_runjob : "owned_by"
+    wmbs_location ||--o{ bl_runjob : "executed_at"
