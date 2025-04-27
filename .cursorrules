@@ -27,5 +27,9 @@
     Performance Optimization:
     - Profile code to identify and optimize bottlenecks.
 
+    Syntax and coding style:
+    - Write clear and properly formatted SQL and Python code.
+    - Do not leave trailing whitespaces in the files.
+
     Refer to the official documentation of Python 3.12, Oracle and MariaDB for best practices and up-to-date APIs.
-    
+
