@@ -72,27 +72,26 @@ erDiagram
 ### Resource Control Module
 ```mermaid
 erDiagram
-    wmbs_location ||--o{ wmbs_location_pnns : "has"
-    wmbs_pnns ||--o{ wmbs_location_pnns : "used_in"
-    wmbs_location ||--o{ wmbs_subscription_validation : "validates"
-    wmbs_location_state ||--o{ wmbs_location : "has_state"
+    rc_threshold ||--o{ rc_threshold_metric : "has"
+    rc_threshold ||--o{ rc_threshold_value : "has"
 ```
 
 ### Agent Database Module
 ```mermaid
 erDiagram
-    agent_heartbeat ||--o{ agent_heartbeat_info : "contains"
-    agent_heartbeat ||--o{ agent_heartbeat_error : "has"
+    wm_init ||--o{ wm_components : "initializes"
+    wm_components ||--o{ wm_workers : "manages"
 ```
 
 ### DBS3Buffer Module
 ```mermaid
 erDiagram
+    dbsbuffer_dataset ||--o{ dbsbuffer_block : "contains"
+    dbsbuffer_block ||--o{ dbsbuffer_file : "contains"
     dbsbuffer_file ||--o{ dbsbuffer_file_parent : "has"
     dbsbuffer_file ||--o{ dbsbuffer_file_runlumi_map : "has"
     dbsbuffer_file ||--o{ dbsbuffer_file_checksums : "has"
     dbsbuffer_file ||--o{ dbsbuffer_file_location : "located_at"
-    dbsbuffer_dataset ||--o{ dbsbuffer_file : "contains"
     dbsbuffer_dataset ||--o{ dbsbuffer_algo : "processed_by"
 ```
 
@@ -110,7 +109,7 @@ graph TD
     A --> C[MariaDB Backend]
     B --> D[Oracle 19c]
     C --> E[MariaDB 10.6.21]
-    B --> F[Sequences]
+    B --> F[IDENTITY]
     B --> G[VARCHAR2]
     C --> H[AUTO_INCREMENT]
     C --> I[VARCHAR]
@@ -125,20 +124,30 @@ graph TD
     C --> D[Load Initial Data]
     D --> E[Validate Schema]
     E --> F[End]
-    
+
     subgraph WMBS
     B --> G[Create WMBS Tables]
     C --> H[Create WMBS Indexes]
     D --> I[Load WMBS Data]
     end
-    
+
     subgraph BossAir
     B --> J[Create BossAir Tables]
     C --> K[Create BossAir Indexes]
     end
-    
+
     subgraph ResourceControl
     B --> L[Create ResourceControl Tables]
     C --> M[Create ResourceControl Indexes]
+    end
+
+    subgraph Agent
+    B --> N[Create Agent Tables]
+    C --> O[Create Agent Indexes]
+    end
+
+    subgraph DBS3Buffer
+    B --> P[Create DBS3Buffer Tables]
+    C --> Q[Create DBS3Buffer Indexes]
     end
 ``` 
