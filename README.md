@@ -77,7 +77,7 @@ project_root/
 │       ├── wmbs/         # WMBS schema definitions
 │       │   ├── create_wmbs_tables.sql     # Table definitions with constraints
 │       │   ├── create_wmbs_indexes.sql    # Index definitions
-│   │   │   └── initial_wmbs_data.sql      # Static data for some tables
+│       │   └── initial_wmbs_data.sql      # Static data for some tables
 │       ├── agent/        # WMCore.Agent.Database schema
 │       ├── bossair/      # WMCore.BossAir schema
 │       ├── dbs3buffer/   # WMComponent.DBS3Buffer schema
