@@ -75,62 +75,153 @@ jobs:
           # Execute the SQL file with hardcoded credentials
           docker exec $CONTAINER_ID sqlplus -s "system/oracle@localhost:1521/XE" @/tmp/test.sql
 
+      - name: Copy SQL files to container
+        run: |
+          CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
+          echo "Copying SQL files to container..."
+          docker cp sql $CONTAINER_ID:/tmp/
+          docker exec $CONTAINER_ID ls -la /tmp/sql/oracle/testdb/
+
       - name: Deploy TestDB Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying TestDB schema..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/testdb/create_testdb.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/testdb/create_testdb.sql;
+          EXIT;' > /tmp/run_testdb.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_testdb.sql; then
+            echo "Error: Failed to deploy TestDB schema"
+            exit 1
+          fi
 
       - name: Deploy WMBS Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying WMBS tables..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/wmbs/create_wmbs_tables.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/wmbs/create_wmbs_tables.sql;
+          EXIT;' > /tmp/run_wmbs_tables.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_wmbs_tables.sql; then
+            echo "Error: Failed to deploy WMBS tables"
+            exit 1
+          fi
 
           echo -e "\nDeploying WMBS indexes..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/wmbs/create_wmbs_indexes.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/wmbs/create_wmbs_indexes.sql;
+          EXIT;' > /tmp/run_wmbs_indexes.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_wmbs_indexes.sql; then
+            echo "Error: Failed to deploy WMBS indexes"
+            exit 1
+          fi
 
           echo -e "\nInitializing WMBS data..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/wmbs/initial_wmbs_data.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/wmbs/initial_wmbs_data.sql;
+          EXIT;' > /tmp/run_wmbs_data.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_wmbs_data.sql; then
+            echo "Error: Failed to initialize WMBS data"
+            exit 1
+          fi
 
       - name: Deploy Tier0 Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying Tier0 tables..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/tier0/create_tier0_tables.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/tier0/create_tier0_tables.sql;
+          EXIT;' > /tmp/run_tier0_tables.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_tier0_tables.sql; then
+            echo "Error: Failed to deploy Tier0 tables"
+            exit 1
+          fi
 
           echo -e "\nDeploying Tier0 indexes..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/tier0/create_tier0_indexes.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/tier0/create_tier0_indexes.sql;
+          EXIT;' > /tmp/run_tier0_indexes.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_tier0_indexes.sql; then
+            echo "Error: Failed to deploy Tier0 indexes"
+            exit 1
+          fi
 
           echo -e "\nDeploying Tier0 functions..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/tier0/create_tier0_functions.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/tier0/create_tier0_functions.sql;
+          EXIT;' > /tmp/run_tier0_functions.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_tier0_functions.sql; then
+            echo "Error: Failed to deploy Tier0 functions"
+            exit 1
+          fi
 
           echo -e "\nInitializing Tier0 data..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/tier0/initial_tier0_data.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/tier0/initial_tier0_data.sql;
+          EXIT;' > /tmp/run_tier0_data.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_tier0_data.sql; then
+            echo "Error: Failed to initialize Tier0 data"
+            exit 1
+          fi
 
       - name: Deploy Agent Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying Agent schema..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/agent/create_agent.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/agent/create_agent.sql;
+          EXIT;' > /tmp/run_agent.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_agent.sql; then
+            echo "Error: Failed to deploy Agent schema"
+            exit 1
+          fi
 
       - name: Deploy DBS3Buffer Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying DBS3Buffer schema..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/dbs3buffer/create_dbs3buffer.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/dbs3buffer/create_dbs3buffer.sql;
+          EXIT;' > /tmp/run_dbs3buffer.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_dbs3buffer.sql; then
+            echo "Error: Failed to deploy DBS3Buffer schema"
+            exit 1
+          fi
 
       - name: Deploy BossAir Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying BossAir schema..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/bossair/create_bossair.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/bossair/create_bossair.sql;
+          EXIT;' > /tmp/run_bossair.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_bossair.sql; then
+            echo "Error: Failed to deploy BossAir schema"
+            exit 1
+          fi
 
       - name: Deploy ResourceControl Schema
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo -e "\nDeploying ResourceControl schema..."
-          docker exec $CONTAINER_ID sqlplus system/oracle@localhost:1521/XE @sql/oracle/resourcecontrol/create_resourcecontrol.sql
+          docker exec $CONTAINER_ID bash -c "echo 'WHENEVER SQLERROR EXIT SQL.SQLCODE;
+          WHENEVER OSERROR EXIT 9;
+          @/tmp/sql/oracle/resourcecontrol/create_resourcecontrol.sql;
+          EXIT;' > /tmp/run_resourcecontrol.sql"
+          if ! docker exec $CONTAINER_ID sqlplus -S "system/oracle@localhost:1521/XE" @/tmp/run_resourcecontrol.sql; then
+            echo "Error: Failed to deploy ResourceControl schema"
+            exit 1
+          fi
 
       - name: Verify Schema Deployment
         run: |
