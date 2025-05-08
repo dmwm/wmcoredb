@@ -44,12 +44,19 @@ Tests schema deployment in Oracle:
 * Deploys and validates the same schemas as the MariaDB workflow:
   - TestDB Schema
   - WMBS Schema (tables, indexes, and initial data)
+  - Tier0 Schema (tables, indexes, functions, and initial data)
   - Agent Schema
   - DBS3Buffer Schema
   - BossAir Schema
   - ResourceControl Schema
-* Verifies table structures, indexes, foreign key relationships, and initial data
-* Ensures cross-database compatibility between MariaDB and Oracle backends
+* Comprehensive verification steps:
+  - Table structure validation
+  - Index creation and type verification
+  - Foreign key relationship checks
+  - Initial data population verification
+  - Cross-database compatibility with MariaDB
+* Includes proper error handling and cleanup procedures
+* Uses SQL*Plus for schema deployment and verification
 
 ## Directory Structure
 
