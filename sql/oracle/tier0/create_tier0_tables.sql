@@ -47,7 +47,7 @@ CREATE TABLE t0_config (
 
 CREATE TABLE t0_deployment_id (
     name   VARCHAR2(15)  NOT NULL,
-    id     NUMBER(11)    NOT NULL,
+    id     NUMBER(16)    NOT NULL,
     PRIMARY KEY(name),
     CONSTRAINT CK_DEPLOY_ID CHECK (name='deployment_id')
 ) ORGANIZATION INDEX
