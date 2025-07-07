@@ -78,30 +78,30 @@ jobs:
       - name: Deploy TestDB Schema
         run: |
           set -e  # Exit immediately if a command exits with a non-zero status
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/testdb/create_testdb.sql || exit 1
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/testdb/create_testdb.sql || exit 1
 
       - name: Deploy WMBS Schema
         run: |
           set -e  # Exit immediately if a command exits with a non-zero status
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/wmbs/create_wmbs_tables.sql || exit 1
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/wmbs/create_wmbs_indexes.sql
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/wmbs/initial_wmbs_data.sql
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/wmbs/create_wmbs_tables.sql || exit 1
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/wmbs/create_wmbs_indexes.sql
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/wmbs/initial_wmbs_data.sql
 
       - name: Deploy Agent Schema
         run: |
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/agent/create_agent.sql
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/agent/create_agent.sql
 
       - name: Deploy DBS3Buffer Schema
         run: |
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/dbs3buffer/create_dbs3buffer.sql
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/dbs3buffer/create_dbs3buffer.sql
 
       - name: Deploy BossAir Schema
         run: |
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/bossair/create_bossair.sql
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/bossair/create_bossair.sql
 
       - name: Deploy ResourceControl Schema
         run: |
-          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < sql/mariadb/resourcecontrol/create_resourcecontrol.sql
+          mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD $MARIADB_DATABASE < src/sql/mariadb/resourcecontrol/create_resourcecontrol.sql
 
       - name: Verify Schema Deployment
         run: |

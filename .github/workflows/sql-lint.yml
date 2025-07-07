@@ -20,7 +20,7 @@ jobs:
       - name: MariaDB SQL Lint
         run: |
           echo "Finding MariaDB SQL files..."
-          for file in sql/mariadb/**/*.sql; do
+          for file in src/sql/mariadb/**/*.sql; do
             echo "Linting: $file"
             sqlfluff lint "$file"
           done
@@ -28,7 +28,7 @@ jobs:
       - name: Oracle SQL Lint
         run: |
           echo "Finding Oracle SQL files..."
-          for file in sql/oracle/**/*.sql; do
+          for file in src/sql/oracle/**/*.sql; do
             echo "Linting: $file"
             sqlfluff lint \
               --config .sqlfluff.oracle \
