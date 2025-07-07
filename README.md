@@ -64,77 +64,77 @@ The database schema files are organized as follows:
 
 ```
 project_root/
-├── sql/                   # Database schema files
-│   ├── oracle/           # Oracle-specific SQL files
-│   │   ├── wmbs/         # WMBS schema definitions
-│   │   │   ├── create_wmbs_tables.sql     # Table definitions with constraints
-│   │   │   ├── create_wmbs_indexes.sql    # Index definitions
-│   │   │   └── initial_wmbs_data.sql      # Static data for some tables
-│   │   ├── agent/        # WMCore.Agent.Database schema
-│   │   ├── bossair/      # WMCore.BossAir schema
-│   │   ├── dbs3buffer/   # WMComponent.DBS3Buffer schema
-│   │   ├── resourcecontrol/ # WMCore.ResourceControl schema
-│   │   ├── testdb/       # WMQuality.TestDB schema
-│   │   └── tier0/        # Tier0 schema definitions
-│   │       ├── create_tier0_tables.sql    # Table definitions with constraints
-│   │       ├── create_tier0_indexes.sql   # Index definitions
-│   │       ├── create_tier0_functions.sql # Helper functions
-│   │       └── initial_tier0_data.sql     # Initial data for Tier0 tables
-│   └── mariadb/          # MariaDB-specific SQL files
-│       ├── wmbs/         # WMBS schema definitions
-│       │   ├── create_wmbs_tables.sql     # Table definitions with constraints
-│       │   ├── create_wmbs_indexes.sql    # Index definitions
-│       │   └── initial_wmbs_data.sql      # Static data for some tables
-│       ├── agent/        # WMCore.Agent.Database schema
-│       ├── bossair/      # WMCore.BossAir schema
-│       ├── dbs3buffer/   # WMComponent.DBS3Buffer schema
-│       ├── resourcecontrol/ # WMCore.ResourceControl schema
-│       ├── testdb/       # WMQuality.TestDB schema
-│       └── tier0/        # Tier0 schema definitions (NOT IMPLEMENTED)
-└── src/
-    └── python/
-        └── db/            # Schema generation code
-            ├── wmbs/
-            ├── agent/
-            ├── bossair/
-            ├── dbs3buffer/
-            ├── resourcecontrol/
-            └── testdb/
-            └── execute_wmbs_sql.py
+├── src/
+│   ├── sql/              # Database schema files (moved from root)
+│   │   ├── oracle/       # Oracle-specific SQL files
+│   │   │   ├── wmbs/     # WMBS schema definitions
+│   │   │   │   ├── create_wmbs_tables.sql     # Table definitions with constraints
+│   │   │   │   ├── create_wmbs_indexes.sql    # Index definitions
+│   │   │   │   └── initial_wmbs_data.sql      # Static data for some tables
+│   │   │   ├── agent/    # WMCore.Agent.Database schema
+│   │   │   ├── bossair/  # WMCore.BossAir schema
+│   │   │   ├── dbs3buffer/ # WMComponent.DBS3Buffer schema
+│   │   │   ├── resourcecontrol/ # WMCore.ResourceControl schema
+│   │   │   ├── testdb/   # WMQuality.TestDB schema
+│   │   │   └── tier0/    # Tier0 schema definitions
+│   │   │       ├── create_tier0_tables.sql    # Table definitions with constraints
+│   │   │       ├── create_tier0_indexes.sql   # Index definitions
+│   │   │       ├── create_tier0_functions.sql # Helper functions
+│   │   │       └── initial_tier0_data.sql     # Initial data for Tier0 tables
+│   │   └── mariadb/      # MariaDB-specific SQL files
+│   │       ├── wmbs/     # WMBS schema definitions
+│   │       │   ├── create_wmbs_tables.sql     # Table definitions with constraints
+│   │       │   ├── create_wmbs_indexes.sql    # Index definitions
+│   │       │   └── initial_wmbs_data.sql      # Static data for some tables
+│   │       ├── agent/    # WMCore.Agent.Database schema
+│   │       ├── bossair/  # WMCore.BossAir schema
+│   │       ├── dbs3buffer/ # WMComponent.DBS3Buffer schema
+│   │       ├── resourcecontrol/ # WMCore.ResourceControl schema
+│   │       ├── testdb/   # WMQuality.TestDB schema
+│   │       └── tier0/    # Tier0 schema definitions (NOT IMPLEMENTED)
+│   └── python/
+│       └── db/           # Schema generation code
+│           ├── wmbs/
+│           ├── agent/
+│           ├── bossair/
+│           ├── dbs3buffer/
+│           ├── resourcecontrol/
+│           └── testdb/
+│           └── execute_wmbs_sql.py
 ```
 
 ## Schema Components
 
 The WMAgent database schema consists of several components:
 
-1. **WMBS** (`sql/{oracle,mariadb}/wmbs/`)
+1. **WMBS** (`src/sql/{oracle,mariadb}/wmbs/`)
    - Core workload and job management
    - Tables for jobs, subscriptions, and file tracking
    - Initial data for job states and subscription types
 
-2. **Agent Database** (`sql/{oracle,mariadb}/agent/`)
+2. **Agent Database** (`src/sql/{oracle,mariadb}/agent/`)
    - Core agent functionality
    - Component and worker management
 
-3. **BossAir** (`sql/{oracle,mariadb}/bossair/`)
+3. **BossAir** (`src/sql/{oracle,mariadb}/bossair/`)
    - Job submission and tracking
    - Grid and batch system integration
 
-4. **DBS3Buffer** (`sql/{oracle,mariadb}/dbs3buffer/`)
+4. **DBS3Buffer** (`src/sql/{oracle,mariadb}/dbs3buffer/`)
    - Dataset and file management
    - Checksum and location tracking
 
-5. **ResourceControl** (`sql/{oracle,mariadb}/resourcecontrol/`)
+5. **ResourceControl** (`src/sql/{oracle,mariadb}/resourcecontrol/`)
    - Site and resource management
    - Threshold control
 
-6. **Test Database** (`sql/{oracle,mariadb}/testdb/`)
+6. **Test Database** (`src/sql/{oracle,mariadb}/testdb/`)
    - Simple test tables for database validation
    - Used for testing database connectivity and basic operations
    - Includes tables with different data types and constraints
    - Available for both Oracle and MariaDB backends
 
-7. **Tier0 Schema** (`sql/{oracle,mariadb}/tier0/`)
+7. **Tier0 Schema** (`src/sql/{oracle,mariadb}/tier0/`)
    - Run management and tracking
    - Stream and dataset associations
    - Lumi section processing
@@ -146,7 +146,7 @@ The WMAgent database schema consists of several components:
 The WMBS schema is initialized first and consists of three files:
 
 ```
-sql/{oracle,mariadb}/wmbs/
+src/sql/{oracle,mariadb}/wmbs/
 ├── create_wmbs_tables.sql   # Core WMBS tables
 ├── create_wmbs_indexes.sql  # Indexes for performance
 └── initial_wmbs_data.sql   # Initial data like job states
@@ -158,7 +158,7 @@ These files are executed in order by `execute_wmbs_sql.py` to set up the base WM
 
 The schema supports two database backends:
 
-- **Oracle** (`sql/oracle/`)
+- **Oracle** (`src/sql/oracle/`)
   - Uses `NUMBER(11)` for integers
   - Uses `VARCHAR2` for strings
   - Uses `GENERATED BY DEFAULT AS IDENTITY` for auto-increment
@@ -168,7 +168,7 @@ The schema supports two database backends:
     - Semicolon terminates the PL/SQL block
     - Slash executes the block
 
-- **MariaDB** (`sql/mariadb/`)
+- **MariaDB** (`src/sql/mariadb/`)
   - Uses `INT` for integers
   - Uses `VARCHAR` for strings
   - Uses `AUTO_INCREMENT` for auto-increment
@@ -208,26 +208,26 @@ To create the database schema:
 
 1. For Oracle:
 ```sql
-@sql/oracle/testdb/create_testdb.sql
-@sql/oracle/tier0/create_tier0_tables.sql
-@sql/oracle/tier0/create_tier0_indexes.sql
-@sql/oracle/tier0/create_tier0_functions.sql
-@sql/oracle/tier0/initial_tier0_data.sql
-@sql/oracle/wmbs/create_wmbs_tables.sql
-@sql/oracle/wmbs/create_wmbs_indexes.sql
-@sql/oracle/wmbs/initial_wmbs_data.sql
+@src/sql/oracle/testdb/create_testdb.sql
+@src/sql/oracle/tier0/create_tier0_tables.sql
+@src/sql/oracle/tier0/create_tier0_indexes.sql
+@src/sql/oracle/tier0/create_tier0_functions.sql
+@src/sql/oracle/tier0/initial_tier0_data.sql
+@src/sql/oracle/wmbs/create_wmbs_tables.sql
+@src/sql/oracle/wmbs/create_wmbs_indexes.sql
+@src/sql/oracle/wmbs/initial_wmbs_data.sql
 ```
 
 2. For MariaDB:
 ```sql
-source sql/mariadb/testdb/create_testdb.sql
-source sql/mariadb/tier0/create_tier0_tables.sql
-source sql/mariadb/tier0/create_tier0_indexes.sql
-source sql/mariadb/tier0/create_tier0_functions.sql
-source sql/mariadb/tier0/initial_tier0_data.sql
-source sql/mariadb/wmbs/create_wmbs_tables.sql
-source sql/mariadb/wmbs/create_wmbs_indexes.sql
-source sql/mariadb/wmbs/initial_wmbs_data.sql
+source src/sql/mariadb/testdb/create_testdb.sql
+source src/sql/mariadb/tier0/create_tier0_tables.sql
+source src/sql/mariadb/tier0/create_tier0_indexes.sql
+source src/sql/mariadb/tier0/create_tier0_functions.sql
+source src/sql/mariadb/tier0/initial_tier0_data.sql
+source src/sql/mariadb/wmbs/create_wmbs_tables.sql
+source src/sql/mariadb/wmbs/create_wmbs_indexes.sql
+source src/sql/mariadb/wmbs/initial_wmbs_data.sql
 ```
 
 ## Schema Generation
