@@ -1,0 +1,75 @@
+name: Test Package Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build pytest
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Verify package contents
+      run: |
+        # Check that SQL files are included
+        tar -tzf dist/*.tar.gz | grep -E "\.sql$" | head -10
+        unzip -l dist/*.whl | grep -E "\.sql$" | head -10
+        
+        # Check that package structure is correct
+        tar -tzf dist/*.tar.gz | grep "wmcoredb/" | head -10
+        unzip -l dist/*.whl | grep "wmcoredb/" | head -10
+
+    - name: Test package installation
+      run: |
+        pip install dist/*.whl
+        
+        # Test basic functionality
+        python -c "
+        import wmcoredb
+        print(f'Version: {wmcoredb.__version__}')
+        print(f'Schemas: {wmcoredb.list_schemas()}')
+        print(f'Backends: {wmcoredb.list_backends()}')
+        "
+
+    - name: Test schema access
+      run: |
+        pip install dist/*.whl
+        
+        python -c "
+        import wmcoredb
+        
+        # Test getting SQL files
+        sql_files = wmcoredb.get_sql_files('wmbs', 'oracle')
+        print(f'WMBS Oracle files: {[f.name for f in sql_files]}')
+        
+        # Test getting schema info
+        info = wmcoredb.get_schema_info()
+        print(f'Available schemas: {list(info.keys())}')
+        "
+
+    - name: Run example script
+      run: |
+        pip install dist/*.whl
+        python examples/usage_example.py 
