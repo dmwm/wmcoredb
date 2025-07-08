@@ -59,29 +59,28 @@ jobs:
         import sys
         import site
 
-        # Find the installed package location
-        package_name = 'wmcoredb'
-        package_found = False
+        # Find the installed data files location
+        data_found = False
 
         # Check all site-packages directories
         for site_dir in site.getsitepackages() + [site.getusersitepackages()]:
-            # Look for the package directory
-            package_dir = os.path.join(site_dir, package_name)
-            if os.path.exists(package_dir):
-                print(f'✓ Found package at: {package_dir}')
-                package_found = True
+            # Look for the data directory structure
+            data_dir = os.path.join(site_dir, 'wmcoredb-0.0.0.data', 'data', 'wmcoredb')
+            if os.path.exists(data_dir):
+                print(f'✓ Found data directory at: {data_dir}')
+                data_found = True
 
-                # Count SQL files in the package directory
+                # Count SQL files in the data directory
                 sql_count = 0
-                for root, dirs, files in os.walk(package_dir):
+                for root, dirs, files in os.walk(data_dir):
                     for file in files:
                         if file.endswith('.sql'):
                             sql_count += 1
 
-                print(f'✓ Found {sql_count} SQL files in package directory')
+                print(f'✓ Found {sql_count} SQL files in data directory')
 
                 # Test a specific file
-                test_file = os.path.join(package_dir, 'sql', 'mariadb', 'wmbs', 'create_wmbs_tables.sql')
+                test_file = os.path.join(data_dir, 'sql', 'mariadb', 'wmbs', 'create_wmbs_tables.sql')
                 if os.path.exists(test_file):
                     with open(test_file, 'r') as f:
                         content = f.read()
@@ -90,22 +89,9 @@ jobs:
                     break
                 else:
                     print(f'✗ Test file not found: {test_file}')
-                    # Also check the data directory structure
-                    data_dir = os.path.join(site_dir, 'wmcoredb-0.0.0.data', 'data', 'wmcoredb')
-                    if os.path.exists(data_dir):
-                        print(f'✓ Found data directory at: {data_dir}')
-                        data_test_file = os.path.join(data_dir, 'sql', 'mariadb', 'wmbs', 'create_wmbs_tables.sql')
-                        if os.path.exists(data_test_file):
-                            with open(data_test_file, 'r') as f:
-                                content = f.read()
-                                print(f'✓ SQL file in data directory contains {len(content)} characters')
-                            print('✓ Data file access test passed (found in data directory)')
-                            break
-                        else:
-                            print(f'✗ Test file not found in data directory: {data_test_file}')
                     exit(1)
 
-        if not package_found:
-            print('✗ Package not found in any site-packages directory')
+        if not data_found:
+            print('✗ Data directory not found in any site-packages directory')
             exit(1)
         "
