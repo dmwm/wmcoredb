@@ -79,7 +79,7 @@ jobs:
         run: |
           CONTAINER_ID=$(docker ps -q --filter "ancestor=gvenzl/oracle-xe:18.4.0-slim")
           echo "Copying SQL files to container..."
-          docker cp src/wmcoredb/sql $CONTAINER_ID:/tmp/
+          docker cp src/sql $CONTAINER_ID:/tmp/
           docker exec $CONTAINER_ID ls -la /tmp/sql/oracle/testdb/
 
       - name: Deploy WMBS Schema
