@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wmcoredb"
-dynamic = ["version"]
+version = "0.1.0"
 description = "WMCore Database Schema - Database schema definitions for WMCore components"
 readme = "README.md"
 license = "Apache-2.0"
@@ -45,14 +45,3 @@ Repository = "https://github.com/amaltaro/wmcoredb"
 Documentation = "https://github.com/amaltaro/wmcoredb#readme"
 Issues = "https://github.com/amaltaro/wmcoredb/issues"
 Changelog = "https://github.com/amaltaro/wmcoredb/releases"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["wmcoredb*"]
-exclude = ["python*"]
-
-[tool.setuptools.package-data]
-"wmcoredb" = ["sql/**/*.sql"]
-
-[tool.setuptools.dynamic]
-version = {attr = "wmcoredb.version.__version__"} 

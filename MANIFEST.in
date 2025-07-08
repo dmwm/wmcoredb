@@ -1,7 +1,6 @@
 include README.md
 include LICENSE
 include CONTRIBUTING.md
-include pyproject.toml
 
 recursive-include src/sql *.sql
 recursive-include diagrams *.md
@@ -10,4 +9,4 @@ recursive-include diagrams *.tsv
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
-recursive-exclude * .DS_Store 
+recursive-exclude * .DS_Store
