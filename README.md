@@ -1,6 +1,9 @@
 [![SQL Linting](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml)
 [![MariaDB Schema Validation](https://github.com/amaltaro/wmcoredb/actions/workflows/mariadb-schema-test.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/mariadb-schema-test.yml)
 [![Oracle Schema Validation](https://github.com/amaltaro/wmcoredb/actions/workflows/oracle-schema-test.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/oracle-schema-test.yml)
+[![Test Package Build](https://github.com/amaltaro/wmcoredb/actions/workflows/test-build.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/test-build.yml)
+[![Release to PyPI](https://github.com/amaltaro/wmcoredb/actions/workflows/release.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/release.yml)
+[![PyPI](https://img.shields.io/pypi/v/wmcoredb.svg)](https://pypi.org/project/wmcoredb/)
 
 # WMCore Database Schema
 
@@ -8,6 +11,42 @@ Database schema definitions for WMCore components, including both MariaDB and Or
 
 WMBS (Workload Management Bookkeeping Service) provides the database schema for managing 
 workloads and jobs.
+
+## Python Package
+
+This repository is also available as a Python package on PyPI:
+
+```bash
+pip install wmcoredb
+```
+
+### Usage
+
+```python
+import wmcoredb
+
+# List available schemas
+schemas = wmcoredb.list_schemas()
+print(f"Available schemas: {schemas}")
+
+# Get SQL files for WMBS schema in Oracle
+sql_files = wmcoredb.get_sql_files('wmbs', 'oracle')
+for file_path in sql_files:
+    print(f"SQL file: {file_path.name}")
+
+# Get comprehensive schema information
+schema_info = wmcoredb.get_schema_info()
+print(f"Available backends: {list(schema_info.keys())}")
+```
+
+For more examples, see the [usage example](examples/usage_example.py).
+
+## Development
+
+For local development and testing, see the [scripts directory](scripts/README.md) for development tools:
+
+- `scripts/setup_dev.py` - Development environment setup
+- `scripts/test_package.py` - Comprehensive package testing
 
 ## CI/CD Pipeline
 
@@ -64,77 +103,87 @@ The database schema files are organized as follows:
 
 ```
 project_root/
+├── scripts/              # Development and testing scripts
+│   ├── setup_dev.py      # Development environment setup
+│   ├── test_package.py   # Comprehensive package testing
+│   └── README.md         # Scripts documentation
+├── examples/             # Usage examples
+│   └── usage_example.py  # Package usage demonstration
 ├── src/
-│   ├── sql/              # Database schema files (moved from root)
-│   │   ├── oracle/       # Oracle-specific SQL files
-│   │   │   ├── wmbs/     # WMBS schema definitions
-│   │   │   │   ├── create_wmbs_tables.sql     # Table definitions with constraints
-│   │   │   │   ├── create_wmbs_indexes.sql    # Index definitions
-│   │   │   │   └── initial_wmbs_data.sql      # Static data for some tables
-│   │   │   ├── agent/    # WMCore.Agent.Database schema
-│   │   │   ├── bossair/  # WMCore.BossAir schema
-│   │   │   ├── dbs3buffer/ # WMComponent.DBS3Buffer schema
-│   │   │   ├── resourcecontrol/ # WMCore.ResourceControl schema
-│   │   │   ├── testdb/   # WMQuality.TestDB schema
-│   │   │   └── tier0/    # Tier0 schema definitions
-│   │   │       ├── create_tier0_tables.sql    # Table definitions with constraints
-│   │   │       ├── create_tier0_indexes.sql   # Index definitions
-│   │   │       ├── create_tier0_functions.sql # Helper functions
-│   │   │       └── initial_tier0_data.sql     # Initial data for Tier0 tables
-│   │   └── mariadb/      # MariaDB-specific SQL files
-│   │       ├── wmbs/     # WMBS schema definitions
-│   │       │   ├── create_wmbs_tables.sql     # Table definitions with constraints
-│   │       │   ├── create_wmbs_indexes.sql    # Index definitions
-│   │       │   └── initial_wmbs_data.sql      # Static data for some tables
-│   │       ├── agent/    # WMCore.Agent.Database schema
-│   │       ├── bossair/  # WMCore.BossAir schema
-│   │       ├── dbs3buffer/ # WMComponent.DBS3Buffer schema
-│   │       ├── resourcecontrol/ # WMCore.ResourceControl schema
-│   │       ├── testdb/   # WMQuality.TestDB schema
-│   │       └── tier0/    # Tier0 schema definitions (NOT IMPLEMENTED)
-│   └── python/
-│       └── db/           # Schema generation code
-│           ├── wmbs/
-│           ├── agent/
-│           ├── bossair/
-│           ├── dbs3buffer/
-│           ├── resourcecontrol/
-│           └── testdb/
-│           └── execute_wmbs_sql.py
+│   └── wmcoredb/        # Python package
+│       ├── __init__.py   # Package initialization
+│       ├── schema.py     # Schema utilities
+│       ├── version.py    # Package version
+│       └── sql/          # Database schema files (part of package)
+│           ├── oracle/   # Oracle-specific SQL files
+│           │   ├── wmbs/ # WMBS schema definitions
+│           │   │   ├── create_wmbs_tables.sql     # Table definitions with constraints
+│           │   │   ├── create_wmbs_indexes.sql    # Index definitions
+│           │   │   └── initial_wmbs_data.sql      # Static data for some tables
+│           │   ├── agent/    # WMCore.Agent.Database schema
+│           │   ├── bossair/  # WMCore.BossAir schema
+│           │   ├── dbs3buffer/ # WMComponent.DBS3Buffer schema
+│           │   ├── resourcecontrol/ # WMCore.ResourceControl schema
+│           │   ├── testdb/   # WMQuality.TestDB schema
+│           │   └── tier0/    # Tier0 schema definitions
+│           │       ├── create_tier0_tables.sql    # Table definitions with constraints
+│           │       ├── create_tier0_indexes.sql   # Index definitions
+│           │       ├── create_tier0_functions.sql # Helper functions
+│           │       └── initial_tier0_data.sql     # Initial data for Tier0 tables
+│           └── mariadb/  # MariaDB-specific SQL files
+│               ├── wmbs/ # WMBS schema definitions
+│               │   ├── create_wmbs_tables.sql     # Table definitions with constraints
+│               │   ├── create_wmbs_indexes.sql    # Index definitions
+│               │   └── initial_wmbs_data.sql      # Static data for some tables
+│               ├── agent/    # WMCore.Agent.Database schema
+│               ├── bossair/  # WMCore.BossAir schema
+│               ├── dbs3buffer/ # WMComponent.DBS3Buffer schema
+│               ├── resourcecontrol/ # WMCore.ResourceControl schema
+│               ├── testdb/   # WMQuality.TestDB schema
+│               └── tier0/    # Tier0 schema definitions (NOT IMPLEMENTED)
+└── src/python/           # Schema generation code (not included in package)
+    └── db/               # Legacy schema generation code
+        ├── wmbs/
+        ├── agent/
+        ├── bossair/
+        ├── dbs3buffer/
+        ├── resourcecontrol/
+        └── testdb/
+        └── execute_wmbs_sql.py
 ```
 
 ## Schema Components
 
 The WMAgent database schema consists of several components:
 
-1. **WMBS** (`src/sql/{oracle,mariadb}/wmbs/`)
+1. **WMBS** (`src/wmcoredb/sql/{oracle,mariadb}/wmbs/`)
    - Core workload and job management
    - Tables for jobs, subscriptions, and file tracking
    - Initial data for job states and subscription types
 
-2. **Agent Database** (`src/sql/{oracle,mariadb}/agent/`)
+2. **Agent Database** (`src/wmcoredb/sql/{oracle,mariadb}/agent/`)
    - Core agent functionality
    - Component and worker management
 
-3. **BossAir** (`src/sql/{oracle,mariadb}/bossair/`)
+3. **BossAir** (`src/wmcoredb/sql/{oracle,mariadb}/bossair/`)
    - Job submission and tracking
    - Grid and batch system integration
 
-4. **DBS3Buffer** (`src/sql/{oracle,mariadb}/dbs3buffer/`)
+4. **DBS3Buffer** (`src/wmcoredb/sql/{oracle,mariadb}/dbs3buffer/`)
    - Dataset and file management
    - Checksum and location tracking
 
-5. **ResourceControl** (`src/sql/{oracle,mariadb}/resourcecontrol/`)
+5. **ResourceControl** (`src/wmcoredb/sql/{oracle,mariadb}/resourcecontrol/`)
    - Site and resource management
    - Threshold control
 
-6. **Test Database** (`src/sql/{oracle,mariadb}/testdb/`)
+6. **Test Database** (`src/wmcoredb/sql/{oracle,mariadb}/testdb/`)
    - Simple test tables for database validation
    - Used for testing database connectivity and basic operations
    - Includes tables with different data types and constraints
    - Available for both Oracle and MariaDB backends
 
-7. **Tier0 Schema** (`src/sql/{oracle,mariadb}/tier0/`)
+7. **Tier0 Schema** (`src/wmcoredb/sql/{oracle,mariadb}/tier0/`)
    - Run management and tracking
    - Stream and dataset associations
    - Lumi section processing
@@ -146,7 +195,7 @@ The WMAgent database schema consists of several components:
 The WMBS schema is initialized first and consists of three files:
 
 ```
-src/sql/{oracle,mariadb}/wmbs/
+src/wmcoredb/sql/{oracle,mariadb}/wmbs/
 ├── create_wmbs_tables.sql   # Core WMBS tables
 ├── create_wmbs_indexes.sql  # Indexes for performance
 └── initial_wmbs_data.sql   # Initial data like job states
@@ -158,7 +207,7 @@ These files are executed in order by `execute_wmbs_sql.py` to set up the base WM
 
 The schema supports two database backends:
 
-- **Oracle** (`src/sql/oracle/`)
+- **Oracle** (`src/wmcoredb/sql/oracle/`)
   - Uses `NUMBER(11)` for integers
   - Uses `VARCHAR2` for strings
   - Uses `GENERATED BY DEFAULT AS IDENTITY` for auto-increment
@@ -168,7 +217,7 @@ The schema supports two database backends:
     - Semicolon terminates the PL/SQL block
     - Slash executes the block
 
-- **MariaDB** (`src/sql/mariadb/`)
+- **MariaDB** (`src/wmcoredb/sql/mariadb/`)
   - Uses `INT` for integers
   - Uses `VARCHAR` for strings
   - Uses `AUTO_INCREMENT` for auto-increment
@@ -208,31 +257,31 @@ To create the database schema:
 
 1. For Oracle:
 ```sql
-@src/sql/oracle/testdb/create_testdb.sql
-@src/sql/oracle/tier0/create_tier0_tables.sql
-@src/sql/oracle/tier0/create_tier0_indexes.sql
-@src/sql/oracle/tier0/create_tier0_functions.sql
-@src/sql/oracle/tier0/initial_tier0_data.sql
-@src/sql/oracle/wmbs/create_wmbs_tables.sql
-@src/sql/oracle/wmbs/create_wmbs_indexes.sql
-@src/sql/oracle/wmbs/initial_wmbs_data.sql
+@src/wmcoredb/sql/oracle/testdb/create_testdb.sql
+@src/wmcoredb/sql/oracle/tier0/create_tier0_tables.sql
+@src/wmcoredb/sql/oracle/tier0/create_tier0_indexes.sql
+@src/wmcoredb/sql/oracle/tier0/create_tier0_functions.sql
+@src/wmcoredb/sql/oracle/tier0/initial_tier0_data.sql
+@src/wmcoredb/sql/oracle/wmbs/create_wmbs_tables.sql
+@src/wmcoredb/sql/oracle/wmbs/create_wmbs_indexes.sql
+@src/wmcoredb/sql/oracle/wmbs/initial_wmbs_data.sql
 ```
 
 2. For MariaDB:
 ```sql
-source src/sql/mariadb/testdb/create_testdb.sql
-source src/sql/mariadb/tier0/create_tier0_tables.sql
-source src/sql/mariadb/tier0/create_tier0_indexes.sql
-source src/sql/mariadb/tier0/create_tier0_functions.sql
-source src/sql/mariadb/tier0/initial_tier0_data.sql
-source src/sql/mariadb/wmbs/create_wmbs_tables.sql
-source src/sql/mariadb/wmbs/create_wmbs_indexes.sql
-source src/sql/mariadb/wmbs/initial_wmbs_data.sql
+source src/wmcoredb/sql/mariadb/testdb/create_testdb.sql
+source src/wmcoredb/sql/mariadb/tier0/create_tier0_tables.sql
+source src/wmcoredb/sql/mariadb/tier0/create_tier0_indexes.sql
+source src/wmcoredb/sql/mariadb/tier0/create_tier0_functions.sql
+source src/wmcoredb/sql/mariadb/tier0/initial_tier0_data.sql
+source src/wmcoredb/sql/mariadb/wmbs/create_wmbs_tables.sql
+source src/wmcoredb/sql/mariadb/wmbs/create_wmbs_indexes.sql
+source src/wmcoredb/sql/mariadb/wmbs/initial_wmbs_data.sql
 ```
 
 ## Schema Generation
 
-The SQL schema files are generated from Python code in `src/python/db/`. Each component has its own schema generation code:
+The SQL schema files are generated from Python code in `src/python/db/` (not included in the package). Each component has its own schema generation code:
 
 ```python
 from WMCore.Database.DBCreator import DBCreator
@@ -247,6 +296,8 @@ The schema files can be executed using `execute_wmbs_sql.py`, which handles:
 - Schema file location
 - Transaction management
 - Error handling
+
+**Note:** The schema generation code in `src/python/db/` is for reference only and is not included in the PyPI package. The package only contains the final SQL files in `src/wmcoredb/sql/`.
 
 ## Logs
 
