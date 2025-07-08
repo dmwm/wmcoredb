@@ -41,7 +41,7 @@ jobs:
           echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
         fi
 
-    - name: Update version
+    - name: Update version in pyproject.toml
       run: |
         sed -i "s/version = \".*\"/version = \"${{ steps.version.outputs.version }}\"/" pyproject.toml
 

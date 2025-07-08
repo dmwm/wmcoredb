@@ -43,14 +43,14 @@ jobs:
 
     - name: Test package installation
       run: |
-        pip install dist/*.whl
+        pip install dist/*.whl --force-reinstall
         
         # Test that package can be installed (data-only package)
         echo "Package installed successfully"
 
     - name: Test data file access
       run: |
-        pip install dist/*.whl
+        pip install dist/*.whl --force-reinstall
         
         # Test that SQL files are accessible via pkg_resources
         python -c "
