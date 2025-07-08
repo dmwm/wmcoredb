@@ -25,7 +25,7 @@ jobs:
     - name: Install build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build pytest
+        pip install build pytest setuptools
 
     - name: Build package
       run: |
@@ -36,7 +36,7 @@ jobs:
         # Check that SQL files are included
         tar -tzf dist/*.tar.gz | grep -E "\.sql$" | head -10
         unzip -l dist/*.whl | grep -E "\.sql$" | head -10
-        
+
         # Check that package structure is correct
         tar -tzf dist/*.tar.gz | grep "wmcoredb/" | head -10
         unzip -l dist/*.whl | grep "wmcoredb/" | head -10
@@ -44,33 +44,57 @@ jobs:
     - name: Test package installation
       run: |
         pip install dist/*.whl --force-reinstall
-        
+
         # Test that package can be installed (data-only package)
         echo "Package installed successfully"
 
     - name: Test data file access
       run: |
         pip install dist/*.whl --force-reinstall
-        
-        # Test that SQL files are accessible via pkg_resources
+
+        # Test that SQL files are accessible by checking wheel contents
+        echo "Testing wheel contents..."
+        unzip -l dist/*.whl | grep -E "\.sql$" | head -10
+
+        # Test that package can be installed and files are accessible
         python -c "
-        import pkg_resources
-        try:
-            # List SQL files in the package
-            sql_files = pkg_resources.resource_listdir('wmcoredb', 'sql')
-            print(f'Found {len(sql_files)} SQL files in package')
+        import os
+        import sys
+        import site
 
-            # Test accessing a specific SQL file
-            file_path = pkg_resources.resource_filename('wmcoredb', 'sql/mariadb/wmbs/create_wmbs_tables.sql')
-            print(f'SQL file path: {file_path}')
+        # Find the installed package location
+        package_name = 'wmcoredb'
+        package_found = False
 
-            # Test reading the file
-            with open(file_path, 'r') as f:
-                content = f.read()
-                print(f'SQL file contains {len(content)} characters')
+        # Check all site-packages directories
+        for site_dir in site.getsitepackages() + [site.getusersitepackages()]:
+            package_dir = os.path.join(site_dir, package_name)
+            if os.path.exists(package_dir):
+                print(f'✓ Found package at: {package_dir}')
+                package_found = True
 
-            print('✓ Data file access test passed')
-        except Exception as e:
-            print(f'✗ Data file access test failed: {e}')
+                # Count SQL files
+                sql_count = 0
+                for root, dirs, files in os.walk(package_dir):
+                    for file in files:
+                        if file.endswith('.sql'):
+                            sql_count += 1
+
+                print(f'✓ Found {sql_count} SQL files in package')
+
+                # Test a specific file
+                test_file = os.path.join(package_dir, 'sql', 'mariadb', 'wmbs', 'create_wmbs_tables.sql')
+                if os.path.exists(test_file):
+                    with open(test_file, 'r') as f:
+                        content = f.read()
+                        print(f'✓ SQL file contains {len(content)} characters')
+                    print('✓ Data file access test passed')
+                    break
+                else:
+                    print(f'✗ Test file not found: {test_file}')
+                    exit(1)
+
+        if not package_found:
+            print('✗ Package not found in any site-packages directory')
             exit(1)
         "
