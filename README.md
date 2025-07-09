@@ -1,8 +1,8 @@
-[![SQL Linting](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/sql-lint.yml)
-[![MariaDB Schema Validation](https://github.com/amaltaro/wmcoredb/actions/workflows/mariadb-schema-test.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/mariadb-schema-test.yml)
-[![Oracle Schema Validation](https://github.com/amaltaro/wmcoredb/actions/workflows/oracle-schema-test.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/oracle-schema-test.yml)
-[![Test Package Build](https://github.com/amaltaro/wmcoredb/actions/workflows/test-build.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/test-build.yml)
-[![Release to PyPI](https://github.com/amaltaro/wmcoredb/actions/workflows/release.yml/badge.svg)](https://github.com/amaltaro/wmcoredb/actions/workflows/release.yml)
+[![SQL Linting](https://github.com/dmwm/wmcoredb/actions/workflows/sql-lint.yml/badge.svg)](https://github.com/dmwm/wmcoredb/actions/workflows/sql-lint.yml)
+[![MariaDB Schema Validation](https://github.com/dmwm/wmcoredb/actions/workflows/mariadb-schema-test.yml/badge.svg)](https://github.com/dmwm/wmcoredb/actions/workflows/mariadb-schema-test.yml)
+[![Oracle Schema Validation](https://github.com/dmwm/wmcoredb/actions/workflows/oracle-schema-test.yml/badge.svg)](https://github.com/dmwm/wmcoredb/actions/workflows/oracle-schema-test.yml)
+[![Test Package Build](https://github.com/dmwm/wmcoredb/actions/workflows/test-build.yml/badge.svg)](https://github.com/dmwm/wmcoredb/actions/workflows/test-build.yml)
+[![Release to PyPI](https://github.com/dmwm/wmcoredb/actions/workflows/release.yml/badge.svg)](https://github.com/dmwm/wmcoredb/actions/workflows/release.yml)
 [![PyPI](https://img.shields.io/pypi/v/wmcoredb.svg)](https://pypi.org/project/wmcoredb/)
 
 # WMCore Database Schema

@@ -40,8 +40,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/amaltaro/wmcoredb"
-Repository = "https://github.com/amaltaro/wmcoredb"
-Documentation = "https://github.com/amaltaro/wmcoredb#readme"
-Issues = "https://github.com/amaltaro/wmcoredb/issues"
-Changelog = "https://github.com/amaltaro/wmcoredb/releases"
+Homepage = "https://github.com/dmwm/wmcoredb"
+Repository = "https://github.com/dmwm/wmcoredb"
+Documentation = "https://github.com/dmwm/wmcoredb#readme"
+Issues = "https://github.com/dmwm/wmcoredb/issues"
+Changelog = "https://github.com/dmwm/wmcoredb/releases"
