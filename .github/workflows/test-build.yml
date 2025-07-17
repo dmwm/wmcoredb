@@ -24,6 +24,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install build pytest setuptools
 
+    - name: Update version for test build
+      run: |
+        # Update version in pyproject.toml for test builds
+        sed -i "s/version = \".*\"/version = \"0.0.0-dev\"/" pyproject.toml
+
     - name: Build package
       run: |
         python -m build
