@@ -19,7 +19,7 @@ jobs:
       MARIADB_DATABASE: wmagent
     strategy:
       matrix:
-        mariadb-version: ['10.6', '10.11', '11.4']
+        mariadb-version: ['10.6', '10.11', '11.4', '11.8']
     timeout-minutes: 10
 
     services:
@@ -141,4 +141,4 @@ jobs:
         continue-on-error: true
         run: |
           mariadb -h$MARIADB_HOST -P$MARIADB_PORT -u$MARIADB_USER -p$MARIADB_PASSWORD -e "DROP DATABASE IF EXISTS $MARIADB_DATABASE" || true
-          echo "Cleanup attempted - any errors above can be safely ignored" 
+          echo "Cleanup attempted - any errors above can be safely ignored"
