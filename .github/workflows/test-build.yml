@@ -54,7 +54,7 @@ jobs:
       run: |
         # Count SQL files in the repository
         echo "Counting SQL files in repository..."
-        repo_sql_count=$(find src/sql -name "*.sql" | wc -l)
+        repo_sql_count=$(find src/wmcoredb/sql -name "*.sql" | wc -l)
         echo "Repository contains $repo_sql_count SQL files"
 
         # Count SQL files in the wheel
@@ -68,7 +68,7 @@ jobs:
         else
           echo "✗ SQL file count mismatch: repository has $repo_sql_count, wheel has $wheel_sql_count"
           echo "Repository files:"
-          find src/sql -name "*.sql" | sort
+          find src/wmcoredb/sql -name "*.sql" | sort
           echo "Wheel files:"
           unzip -l dist/*.whl | grep -E "\.sql$" | sort
           exit 1
