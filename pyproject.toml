@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wmcoredb"
-version = "0.0.0"  # Placeholder - will be overridden by git tag
+version = "0.0.0"  # Placeholder - Will be replaced during CI/CD build
 description = "WMCore Database Schema - Database schema definitions for WMCore components"
 readme = "README.md"
 license = "Apache-2.0"
@@ -30,7 +30,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 requires-python = ">=3.8"
-dependencies = []
+dependencies = [
+    "setuptools>=61.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -45,3 +47,9 @@ Repository = "https://github.com/dmwm/wmcoredb"
 Documentation = "https://github.com/dmwm/wmcoredb#readme"
 Issues = "https://github.com/dmwm/wmcoredb/issues"
 Changelog = "https://github.com/dmwm/wmcoredb/releases"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+wmcoredb = ["sql/**/*.sql"]
