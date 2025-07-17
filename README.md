@@ -22,23 +22,34 @@ pip install wmcoredb
 
 ### Usage
 
-This is a data-only package that provides SQL schema files. After installation, the SQL files are available in the package data directory.
-
-To access the SQL files programmatically:
+The package provides utility functions to easily locate and access SQL schema files:
 
 ```python
-import pkg_resources
-
-# List all SQL files in the package
-sql_files = pkg_resources.resource_listdir('wmcoredb', 'sql')
+import wmcoredb
 
 # Get the path to a specific SQL file
-file_path = pkg_resources.resource_filename('wmcoredb', 'sql/mariadb/wmbs/create_wmbs_tables.sql')
+file_path = wmcoredb.get_sql_file("wmbs", "create_wmbs_tables.sql", "mariadb")
 
-# Read the SQL content
-with open(file_path, 'r') as f:
-    sql_content = f.read()
+# Get the content of a SQL file
+sql_content = wmcoredb.get_sql_content("wmbs", "create_wmbs_tables.sql", "mariadb")
+
+# List available modules
+modules = wmcoredb.list_modules("mariadb")  # ['agent', 'bossair', 'dbs3buffer', 'resourcecontrol', 'testdb', 'wmbs']
+
+# List SQL files in a module
+sql_files = wmcoredb.list_sql_files("wmbs", "mariadb")  # ['create_wmbs_indexes.sql', 'create_wmbs_tables.sql', 'initial_wmbs_data.sql']
+
+# List available backends
+backends = wmcoredb.list_backends()  # ['mariadb', 'oracle']
 ```
+
+### API Reference
+
+- `get_sql_file(module_name, file_name, backend="mariadb")` - Get file path
+- `get_sql_content(module_name, file_name, backend="mariadb")` - Get file content
+- `list_sql_files(module_name=None, backend="mariadb")` - List SQL files
+- `list_modules(backend="mariadb")` - List available modules
+- `list_backends()` - List available backends
 
 ## Development
 
