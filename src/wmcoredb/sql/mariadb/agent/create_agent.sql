@@ -1,6 +1,6 @@
 -- MariaDB tables for WMCore.Agent.Database component
 
-CREATE TABLE wm_init (
+CREATE TABLE wma_init (
     init_param VARCHAR(100) NOT NULL UNIQUE,
     init_value VARCHAR(100) NOT NULL
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
