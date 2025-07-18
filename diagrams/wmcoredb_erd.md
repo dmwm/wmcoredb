@@ -79,7 +79,7 @@ erDiagram
 ### Agent Database Module
 ```mermaid
 erDiagram
-    wm_init ||--o{ wm_components : "initializes"
+    wma_init ||--o{ wm_components : "initializes"
     wm_components ||--o{ wm_workers : "manages"
 ```
 
